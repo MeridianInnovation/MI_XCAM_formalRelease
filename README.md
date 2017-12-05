@@ -56,3 +56,11 @@ MI_XCAM.h
 		unsigned int 		CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 
 		unsigned int		StartStreaming(int Mode, char Temps, char Stream);
+		
+# Known Issues
+
+-	Could not open file
+
+.\MI_Thermal\MI_XCAM_N329_SW_I2C.axf: error: L6002U: Could not open file ..\..\..\..\ThermalAPI_inC\example\demo\KEIL\demo_Data\N32901_SingleTask\ThermalSensorAPI_N329.lib: No such file or directory
+
+Soultion: Probably it is because the path is too long, which may cause problem. Relocate the file to somewhere with shorter path.
