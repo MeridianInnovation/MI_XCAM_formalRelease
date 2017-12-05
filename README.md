@@ -10,6 +10,11 @@ SDK Version: Release V2.00 171205
 # API
 
 ThermalSensor.h
+void			M480_InitSensor(void);
+
+void			M480_OpenSensor(void);
+
+void			M480_StartSensor(void);
 
 void			N329_InitSensor(void);
 
