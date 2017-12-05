@@ -59,7 +59,7 @@ MI_XCAM.h
 		
 # Known Issues
 
--	Could not open file
+-	Could not open file with correct existing file path
 
 .\MI_Thermal\MI_XCAM_N329_SW_I2C.axf: error: L6002U: Could not open file ..\..\..\..\ThermalAPI_inC\example\demo\KEIL\demo_Data\N32901_SingleTask\ThermalSensorAPI_N329.lib: No such file or directory
 
