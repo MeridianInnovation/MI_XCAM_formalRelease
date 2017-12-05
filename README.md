@@ -7,7 +7,7 @@ Please read XCAM_Documentation.docx for more details.
 
 SDK Version: Release V2.00 171205
 
-API
+# API
 
 ThermalSensor.h
 
