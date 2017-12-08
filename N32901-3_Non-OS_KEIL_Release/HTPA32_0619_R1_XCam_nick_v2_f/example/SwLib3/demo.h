@@ -14,9 +14,6 @@ __packed  typedef struct{
 	UINT32 Data;
 }YUV_COLOR_INFO_T;
 #define VERSION		0x12345678
-#define TEMP_OFFSET_DISP 4.5 //Temperature for display
-#define TEMP_OFFSET_COLOR 4.5 //Temperature for color
-
 extern YUV_COLOR_INFO_T YUV_ColorTable[];
 
 extern RGB_COLOR_INFO_T RGB_ColorTable[];

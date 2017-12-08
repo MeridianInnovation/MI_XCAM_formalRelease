@@ -18,6 +18,7 @@
 #define Pixelforth 			256
 #define SENSOR_ADDRESS 		0x1A
 #define EEPROM_ADDRESS 		0x50
+#define TEMP_OFFSET 		4.5 		//Temperature offset
 
 typedef unsigned char uchar;
 

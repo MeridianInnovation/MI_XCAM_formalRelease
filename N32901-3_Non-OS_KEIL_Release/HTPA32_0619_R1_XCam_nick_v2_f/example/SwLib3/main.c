@@ -179,7 +179,9 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 			    sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j]; //TDATA[0][ 0-31*31] from what I can see
 		}	
 	  sum = sum / W_HEIGHT / W_WIDTH;
+
 //	  sum = GetTemp(10,10);
+		
 		
 	  g_i16TempAvg = sum;
       g_i16Ready = 1;
@@ -393,11 +395,12 @@ VOID TempCal(int extend)
 		    for(j=0;j<WIDTH;j++)
 		    {
 			      int index_offset;
-			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
+			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732 + (TEMP_OFFSET * 10);
 			      if(TDATA[g_TDATA_index][count] < 0)
 			      	TDATA[g_TDATA_index][count] = 0;
-			      value  =  TDATA[g_TDATA_index][count] + 600 + (TEMP_OFFSET_COLOR * 10); //add offset here
-			      count++;
+			      value  =  TDATA[g_TDATA_index][count] + 600; //add offset here
+			      
+				  count++;
 			      if(value >= 1200)
 				        value = 1199;
 				

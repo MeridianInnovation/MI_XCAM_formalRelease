@@ -5,7 +5,7 @@ There are two series MCU: M480 & N329-
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V2.00 171205
+SDK Version: Release V2.01 171208
 
 # API
 
@@ -64,3 +64,7 @@ MI_XCAM.h
 .\MI_Thermal\MI_XCAM_N329_SW_I2C.axf: error: L6002U: Could not open file ..\..\..\..\ThermalAPI_inC\example\demo\KEIL\demo_Data\N32901_SingleTask\ThermalSensorAPI_N329.lib: No such file or directory
 
 Soultion: Probably it is because the path is too long, which may cause problem. Relocate the file to somewhere with shorter path.
+
+-	(N329) Can I output Uart/Huart data without opening XCAM?
+
+Solution: You may try to move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
