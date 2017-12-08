@@ -1,4 +1,4 @@
-# MI_XCAM_171205_formalRelease
+# MI_XCAM_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
 There are two series MCU: M480 & N329-
