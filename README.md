@@ -53,9 +53,22 @@ MI_XCAM.h
 
 		unsigned short		GetTemp(unsigned int x, unsigned int y);
 
+		FRAMEPOIS 		GetFramePOIs (void);
+		
+		unsigned short		GetTempDisplay(void);
+
+		int			GetTargetPixelIndex(void);
+
 		unsigned int 		CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 
 		unsigned int		StartStreaming(int Mode, char Temps, char Stream);
+
+		void			SetTempDisplay(unsigned short flag);
+
+		void			SetTargetPixelIndex(int index);
+
+		void 			ResetFramePOIs(void);
+
 		
 # Known Issues
 
