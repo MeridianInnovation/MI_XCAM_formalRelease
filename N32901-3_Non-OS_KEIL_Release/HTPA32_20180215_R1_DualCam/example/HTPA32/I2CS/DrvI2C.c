@@ -5,10 +5,11 @@
  ****************************************************************/
 
 #include <stdlib.h>
-#include <string.h>
 #include "DrvI2C.h"
 #include "W55FA93_reg.h"
 #include "wblib.h"
+
+extern void Vin_Delay(UINT32 nCount);
 
 typedef struct{
 	//INT32 base;		/* i2c bus number */
@@ -26,6 +27,7 @@ typedef struct{
 }i2c_dev;
 
 static i2c_dev volatile i2c_device;
+static INT _i2cSpeed = 100;
 
 //-------------------
 // I2C functions
@@ -34,6 +36,35 @@ static i2c_dev volatile i2c_device;
 static S_I2C_Channel s_sChannel;
 static PFN_DRVI2C_TIMEDELY pfntimedelay=NULL; 
 
+static INT _i2cSetSpeed(INT sp)  
+{
+	UINT d;
+	E_SYS_SRC_CLK eSrcClk;	
+	UINT32 u32PllKHz;	
+	UINT32 u32SysKHz;
+	UINT32 u32CpuKHz;
+	UINT32 u32HclkKHz;
+	UINT32 u32ApbKHz;	
+	
+	//if( sp != 100 && sp != 400)
+		//return(I2C_ERR_NOTTY);	
+
+	sysGetSystemClock(&eSrcClk,
+				 	&u32PllKHz,	
+					&u32SysKHz,
+					&u32CpuKHz,
+					&u32HclkKHz,
+					&u32ApbKHz);	
+	
+	
+	d = ((u32ApbKHz)/(sp * 5)) - 1;
+
+	outpw(REG_I2C_DIVIDER, d & 0xffff);
+
+	//MSG2("Set Speed = %d\n", sp);
+
+	return 0;
+}
 
 /* init i2c_dev after open */
 static VOID _i2cReset(i2c_dev *dev)  
@@ -47,7 +78,7 @@ static VOID _i2cReset(i2c_dev *dev)
 	return;	
 }
 
-INT32 i2cOpen()  
+INT32 i2cOpen(VOID)  
 {
 	i2c_dev *dev;
 	
@@ -65,7 +96,7 @@ INT32 i2cOpen()
 	return 0;
 }
 
-INT32 i2cClose()  
+INT32 i2cClose(VOID)  
 {
 	i2c_dev *dev;
 
@@ -91,6 +122,10 @@ INT32 i2cIoctl(UINT32 cmd, UINT32 arg0, UINT32 arg1)
 			dev->addr = arg0;
 		//	sysprintf("Address : %02x\n", arg0&0xff);
 			break;
+			
+		case I2C_IOC_SET_SPEED:
+			_i2cSpeed = (INT)arg0;
+			return(_i2cSetSpeed((INT)arg0));			
 
 		case I2C_IOC_SET_SUB_ADDRESS:
 
@@ -193,13 +228,13 @@ void DrvI2C_SendStart(void)
 	// Assert start bit
 	_DRVI2C_SDA_SETOUT(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 	_DRVI2C_SDA_SETHIGH(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);		// serial data pin high
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);		// serial clock pin high
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);		// serial data pin low
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);		// serial clock pin low
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 }
 
 void DrvI2C_SendStop(void)
@@ -207,11 +242,11 @@ void DrvI2C_SendStop(void)
 	// Assert stop bit
 	_DRVI2C_SDA_SETOUT(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 	_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);		// serial data pin low
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);		// serial clock pin high
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	_DRVI2C_SDA_SETHIGH(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);		// serial data pin high
-//	DrvI2C_Delay(2);
+//Vin_Delay(50);
 	//DrvI2cDisable(s_sChannel.u32EnablePortIndex, s_sChannel.u32EnablePinMask);
 }
 
@@ -227,7 +262,10 @@ DrvI2C_WriteByte(
 {
 	UINT8   u8DataCount;
 	UINT32 	i32HoldPinValue;
+	UINT8 saveValue;
 	
+saveValue = u8Data;
+ 	
 	if(bStart)
 		DrvI2C_SendStart();
 		
@@ -239,12 +277,12 @@ DrvI2C_WriteByte(
 			_DRVI2C_SDA_SETHIGH(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 		else
 			_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
-//		DrvI2C_Delay(3);
+		//Vin_Delay(50);
 		_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
 		u8Data<<=1;
-//		DrvI2C_Delay(2);
+		//Vin_Delay(50);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+		//Vin_Delay(50);
 	}
 	
 	// No Ack 
@@ -254,22 +292,30 @@ DrvI2C_WriteByte(
 		// Wait Device Ack bit
 		_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 		_DRVI2C_SDA_SETIN(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
-//		DrvI2C_Delay(3);
+		//Vin_Delay(50);
 		_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+		//Vin_Delay(50);
 		i32HoldPinValue = _DRVI2C_SDA_GETVALUE(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
+		
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+		//Vin_Delay(50);
 		
 	}
+	
+	
 	if(bStop)
 		DrvI2C_SendStop();
-//		DrvI2C_Delay(8);
+		//Vin_Delay(50);
+
+	if (i32HoldPinValue)
+	{
+		sysprintf("Ack Fail at u8Data = 0x%x\n", saveValue);
+	//	sysGetChar();
+		return FALSE;
+	}	
+	
+	return TRUE;
 		
-	if (!bCheckAck)
-		return Successful;
-	else	
-		return (i32HoldPinValue == 0 ?Successful:E_DRVI2C_WRITE_FAIL);
 }
 
 //-------------------------------
@@ -282,7 +328,7 @@ DrvI2C_ReadByte(
 	BOOL bStop
 )
 {
-	UINT32   u32Data;
+	UINT32   u32Data=0;
 	UINT8    u8DataCount;
 	UINT32 u32ErrCode = Successful;
 	
@@ -295,13 +341,13 @@ DrvI2C_ReadByte(
 	{	
 		
 		u32Data = u32Data<<1;
-//		DrvI2C_Delay(3);
+//Vin_Delay(50);
 		_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);		
 		if (_DRVI2C_SDA_GETVALUE(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask)==s_sChannel.u32SDAPinMask)
 			u32Data = u32Data|0x01;
-//		DrvI2C_Delay(2);
+//Vin_Delay(50);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+//Vin_Delay(50);
 	}
 	*pu8ReadData = u32Data;
 	if(bSendAck)
@@ -310,17 +356,17 @@ DrvI2C_ReadByte(
 		// write a ACK bit to slave device 
 		_DRVI2C_SDA_SETOUT(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 		_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
-//		DrvI2C_Delay(3);
+//Vin_Delay(50);
 		_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+//Vin_Delay(50);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
-//		DrvI2C_Delay(2);
+//Vin_Delay(50);
 		_DRVI2C_SDA_SETLOW(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 	}
 	
 	if(bStop)
 		DrvI2C_SendStop();
-//			DrvI2C_Delay(8);
+//Vin_Delay(50);
 	return u32ErrCode;
 }
 

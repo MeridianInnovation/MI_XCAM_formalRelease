@@ -1,8 +1,3 @@
-#include "usbd.h"
-#ifdef __cplusplus
-    extern "C" {
-#endif
-
 /* Payload Header */
 #define UVC_PH_EndOfFrame		0x02
 #define UVC_PH_Preview			0x00
@@ -704,19 +699,19 @@ typedef struct{
 }UVC_STATUS_T;
 
 /* Preview Image Frame Index */
-#define UVC_192		1
-#define UVC_320		2
-#define UVC_640		3		
+#define UVC_VGA			1
+#define UVC_QVGA		2
+#define UVC_QQVGA		3		
 
 /* Still Image Frame Index */
-#define UVC_STILL_192		1
-#define UVC_STILL_320		2
-#define UVC_STILL_640		3	
+#define UVC_STILL_VGA		1
+#define UVC_STILL_QVGA		2
+#define UVC_STILL_QQVGA		3	
 
 /* Image Frame Size */
-#define UVC_SIZE_192		0x00012000	/* 192*192 */
-#define UVC_SIZE_320		0x00032000	/* 320*320 */
-#define UVC_SIZE_640		0x00096000	/* 640*480 */
+#define UVC_SIZE_VGA		0x00096000	/* 640*480 */
+#define UVC_SIZE_QVGA		0x00025800	/* 320*240 */
+#define UVC_SIZE_QQVGA		0x00009600	/* 160*120 */
 
 /* Preview and Snapshot Format Index */	  	
 #define UVC_Format_YUY2		1
@@ -745,7 +740,3 @@ BOOL uacdIsReady(void);
 #define	FU_VOLUME_RES				1			
 #define FU_VOLUME_DEF				2
 #define FU_VOLUME_CUR				0x1000
-
-#ifdef __cplusplus
-    }
-#endif

@@ -1,99 +1,59 @@
 #include "ThermalSensor.h"
 #include "w55fa93_vpost.h"
 #include "videoclass_HTPA32.h"
-#include "demo.h"
 
-typedef unsigned char uchar;
 VOID TempCal(int extend);
-int HUART_init(void);
-
-extern EEPROM					EEPROMInfo;
-extern SENSORSETTING			SensorInfo;
-extern unsigned short			Resolution;
-extern signed short 			Target[32][32];
-extern unsigned short 			eloffstackN[ELAMOUNT][StackSize];
-extern unsigned short			VoltageN[2][Pixel+PTATamount+ELAMOUNT+2];
-extern unsigned short			PTATStack[STACKSIZEPTAT],VddSensorStack[STACKSIZEVDD];
-extern unsigned char 			giveOutN,currentBufferN;	
-extern unsigned char  			GetBlindFrame;
-extern unsigned char  			pelStack;
-extern unsigned char  			useStack;
-extern unsigned char 			currentReadBlock;
-extern unsigned char 			FrameCnt;
-extern volatile UINT32 			u32Timerdone;
+void uvcdEvent(UINT8 u8index);
 
 extern __align(4) INT32 u32Data[2][0x25800];
 #ifdef __PANEL__
 extern __align(4) INT32 u32FrameData[];
 #endif
-extern INT32 g_i16TempAvg, g_i16Ready, g_TDATA_index;  
-__align(4) short TDATA[2][1024];
+extern INT32 g_i16DisTemp, g_i16Ready, g_TDATA_index;  
 
-extern int Image[10][192];
-extern int Image_dot[];
-extern INT32 g_extend;
+extern YUV_COLOR_INFO_T YUV_ColorTable[];
+extern RGB_COLOR_INFO_T RGB_ColorPalette[];
+
+extern FRAMEPOIS framePOIs;
 
 LCDFORMATEX lcdInfo;
 
 void create_color_table(void)
 {
     int i,j;
+	unsigned char RVal,GVal,BVal, Color_Y, Color_U, Color_V;
     // Create Color Table 
     for(i=0;i<60;i++)
     {
         for(j=0;j<20;j++)
         {
-            RGB_ColorTable[i*20+j].R = (float)RGB_ColorTable0[i].R  + ((float)RGB_ColorTable0[i+1].R - (float)RGB_ColorTable0[i].R) / 20*j ; 	
-            RGB_ColorTable[i*20+j].G = (float)RGB_ColorTable0[i].G  + ((float)RGB_ColorTable0[i+1].G - (float)RGB_ColorTable0[i].G) / 20*j ; 	
-            RGB_ColorTable[i*20+j].B = (float)RGB_ColorTable0[i].B  + ((float)RGB_ColorTable0[i+1].B - (float)RGB_ColorTable0[i].B) / 20*j ; 
+			RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /20*j); 	
+			GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /20*j); 	
+			BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /20*j); 
+			Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
+			Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
+			Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
+			YUV_ColorTable[i*20+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
         }		
     }
-
-    for(i=0;i<1200;i++)
-    {
-        YUV_ColorTable[i].Y = (float)RGB_ColorTable[i].R * 0.299 	+ (float)RGB_ColorTable[i].G * 0.587	+ (float)RGB_ColorTable[i].B * 0.114;
-        YUV_ColorTable[i].U = (float)RGB_ColorTable[i].R * (-0.169) 	- (float)RGB_ColorTable[i].G * 0.332 	+ (float)RGB_ColorTable[i].B * 0.500 + 128;
-        YUV_ColorTable[i].V = (float)RGB_ColorTable[i].R * 0.5		- (float)RGB_ColorTable[i].G * 0.419 	- (float)RGB_ColorTable[i].B * 0.0813 + 128;
-        YUV_ColorTable[i].Data = (YUV_ColorTable[i].V << 24) | ((YUV_ColorTable[i].Y << 16)) | (YUV_ColorTable[i].U << 8) | (YUV_ColorTable[i].Y);
-		
-    } 
-}
-
-void Delay(UINT32 nCount)
-{
-	volatile UINT32 i;
-//	for(;nCount!=0;nCount--)
-//		for(i=0;i<1;i++);
 }
 
 int main (void)
-{
-    WB_UART_T 	uart;
-    UINT32 		u32ExtFreq,i;	    
-    INT index;   
-	UINT8 u8SendThermaldata = 0;
+{    
+    INT 		index;   
+	UINT8 		u8SendThermaldata = 0;
+
     sysEnableCache(CACHE_WRITE_BACK);	
 
     sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
-            192000,	   	//UINT32 u32PllKHz, 	
-             96000,		  //UINT32 u32SysKHz,
-             96000,		  //UINT32 u32CpuKHz,
-             96000,		  //UINT32 u32HclkKHz,
-             48000);		//UINT32 u32ApbKHz		
-
-    u32ExtFreq = sysGetExternalClock();    	/* KHz unit */	
-
-    /* enable UART */
-    sysUartPort(0);
-    uart.uiFreq = u32ExtFreq*1000;					/* Hz unit */	
-    uart.uiBaudrate = 115200;
-    uart.uiDataBits = WB_DATA_BITS_8;
-    uart.uiStopBits = WB_STOP_BITS_1;
-    uart.uiParity = WB_PARITY_NONE;
-    uart.uiRxTriggerLevel = LEVEL_1_BYTE;
-    sysInitializeUART(&uart);   	
-
+            192000,	   				//UINT32 u32PllKHz, 	
+             96000,		  			//UINT32 u32SysKHz,
+             96000,		  			//UINT32 u32CpuKHz,
+             96000,		  			//UINT32 u32HclkKHz,
+             48000);				//UINT32 u32ApbKHz		
+			 
     create_color_table();
+	
 #ifdef __PANEL__	
     /* Init Panel */	
     lcdInfo.ucVASrcFormat = DRVVPOST_FRAME_YCBYCR;	
@@ -109,17 +69,13 @@ int main (void)
     for(i=0;i<38400;i++)
         u32FrameData[i] = 0x80008000;//0x80FF80FF;
 #endif				
-    /* Init UVC Buffer */
-	for(i=0;i<153600;i++)
-	{
-		u32Data[0][i] = 0x80008000;//0x80FF80FF;
-		u32Data[1][i] = 0x80008000;//0x80FF80FF;
-	}
-	
+
 	N329_InitSensor();
 	N329_OpenSensor();
-
-	HUART_init();
+	
+	// UART/HUART interface initialization
+	N329_Interface_init(UART);
+	
 	/* Open USB Device */
 	udcOpen();
 
@@ -130,9 +86,19 @@ int main (void)
 	udcInit();
 
 	g_extend = 192/2/WIDTH;
-
+	
+	// Enable/Disable temperature display
+	SetTempDisplay(1);
+	
+	// Set to show particular pixel values
+	//SetTargetPixelIndex(WIDTH-1);
+	//SetTargetPixelIndex(WIDTH*HEIGHT - (WIDTH-1));
+	
 	while(1)
 	{		
+		// Reset POI records for every frame
+		ResetFramePOIs();
+		
 		// Get Image Data 			
 		index = StartStreaming(0, 1, 1);
 
@@ -140,14 +106,14 @@ int main (void)
 		{				
 			if (usbdStatus.appConnected == 1)
 			{
-				TempCal(g_extend);	
+				TempCal(g_extend);
 				if(u8SendThermaldata)
 				{
-						uvcdSendImage((UINT32)&TDATA[g_TDATA_index], 2048, uvcStatus.StillImage);						
-						// Wait for Complete  			
-						while(!uvcdIsReady());		 
-						u8SendThermaldata = 0;
-						while(!uvcdIsReady());		
+					uvcdSendImage((UINT32)&TDATA[g_TDATA_index], 2048, uvcStatus.StillImage);						
+					// Wait for Complete  			
+					while(!uvcdIsReady());		 
+					u8SendThermaldata = 0;
+					while(!uvcdIsReady());		
 				}
 				uvcdEvent(g_TDATA_index);	
 				u8SendThermaldata = 1;	
@@ -165,75 +131,75 @@ int main (void)
  **/
 void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp, UINT32 x, UINT32 y) //x-y goes 0-31
 {
-    int i,j;
-	  int sum = 0;
-	  UINT32 u32start,u32Index0,u32Index1,u32Index2,u32Index3;
-		UINT32 start_UVC, start_LCD, offset_UVC, offset_LCD_tmp;
-	
-    /* Temperature Average */	
-	  //u32start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
-	  u32start = y * WIDTH + x; //starting location
-	  for(i=0;i<W_HEIGHT;i++) //get sum of the pixels in box
+	int i,j;
+	int sum = 0;
+	UINT32 u32start,u32Index0,u32Index1,u32Index2,u32Index3;
+	UINT32 start_UVC, start_LCD, offset_UVC, offset_LCD_tmp;
+
+	/* Temperature Average */	
+	if(GetTargetPixelIndex() == -1) {		
+	  u32start = y * WIDTH + x; 		//starting location
+	  for(i=0;i<W_HEIGHT;i++) 			//get sum of the pixels in box
 	  {
-		    for(j=0;j<W_WIDTH;j++)					    
-			    sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j]; //TDATA[0][ 0-31*31] from what I can see
+			for(j=0;j<W_WIDTH;j++)					    
+				sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j]; //TDATA[0][ 0-31*31] from what I can see
 		}	
 	  sum = sum / W_HEIGHT / W_WIDTH;
-
-//	  sum = GetTemp(10,10);
+	  
+	}
+	else
+		sum = GetTemp(GetTargetPixelIndex()%WIDTH,GetTargetPixelIndex()/WIDTH);
 		
+	// Single pixel
+	//sum = GetTemp(31,0);
 		
-	  g_i16TempAvg = sum;
-      g_i16Ready = 1;
-	  u32Index0 = (sum /1000); //get decimal places i think
-
-	  u32Index1 = (sum /100) % 10;
-
-	  u32Index2 = (sum /10) % 10;
+	g_i16DisTemp = sum;
+	g_i16Ready = 1;
+	u32Index0 = (sum /1000);
+	u32Index1 = (sum /100) % 10;
+	u32Index2 = (sum /10) % 10;
+	u32Index3 = sum % 10;
 		
-		u32Index3 = sum % 10;
-		
-    /* Temperature display */	
-
-	  if(uvcStatus.FrameIndex == UVC_640) //display location for phone app
+	/* Temperature display */	
+	if(uvcStatus.FrameIndex == UVC_640) //display location for phone app
 		start_UVC = ((yDisp + 1) * 7 * 640) + ((xDisp + 7) * 7);
-		//display is 2 pixels high, 4 long
-	  else
+	//display is 2 pixels high, 4 long
+	else
 		start_UVC = (yDisp * 96 * 6) + (96 * (xDisp / 32.0)); //handles display location for amcam
-		//display is 4 pixels high; 9.5 long; xDisp, yDisp, xTemp, yTemp
+	//display is 4 pixels high; 9.5 long; xDisp, yDisp, xTemp, yTemp
+
+	start_LCD = (2*WIDTH*3 - 56) / 2;	
 		
-	  start_LCD = (2*WIDTH*3 - 56) / 2;	
-		
-	  for(i = 0;i< 24;i++)
-	  {
-	  	  if(uvcStatus.FrameIndex == UVC_640)
-	  	  	  offset_UVC = start_UVC + i * 640/2;			
-	  	  else
-			      offset_UVC = start_UVC + i * u32UVCWidth/2;	
-		
-	  	  offset_LCD_tmp = start_LCD + 28 + i * PANEL_WIDTH/2 + offset_LCD;												
+	for(i = 0;i< 24;i++)
+	{
+		if(uvcStatus.FrameIndex == UVC_640)
+		  offset_UVC = start_UVC + i * 640/2;			
+		else
+			  offset_UVC = start_UVC + i * u32UVCWidth/2;	
+
+		offset_LCD_tmp = start_LCD + 28 + i * PANEL_WIDTH/2 + offset_LCD;												
 				
-	  	  memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 0],(void *) &Image[u32Index0][i*8],32);
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 0],(void *) &Image[u32Index0][i*8],32);
 #ifdef __PANEL__				
-	  	  memcpy((void *)&u32FrameData[offset_LCD_tmp + 0],(void *) &Image[u32Index0][i*8],32);
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 0],(void *) &Image[u32Index0][i*8],32);
 #endif		
-	  	  memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 8],(void *) &Image[u32Index1][i*8],32);
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 8],(void *) &Image[u32Index1][i*8],32);
 #ifdef __PANEL__				
-	  	  memcpy((void *)&u32FrameData[offset_LCD_tmp + 8],(void *) &Image[u32Index1][i*8],32);
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 8],(void *) &Image[u32Index1][i*8],32);
 #endif		
-	  	  memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 16],(void *) &Image[u32Index2][i*8],32);
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 16],(void *) &Image[u32Index2][i*8],32);
 #ifdef __PANEL__				
-	  	  memcpy((void *)&u32FrameData[offset_LCD_tmp + 16],(void *) &Image[u32Index2][i*8],32);	
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 16],(void *) &Image[u32Index2][i*8],32);	
 #endif			
-	  	  memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 24],(void *) &Image_dot[i*4],16);
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 24],(void *) &Image_dot[i*4],16);
 #ifdef __PANEL__				
-	  	  memcpy((void *)&u32FrameData[offset_LCD_tmp + 24],(void *) &Image_dot[i*4],16);		
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 24],(void *) &Image_dot[i*4],16);		
 #endif		
-	  	  memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 28],(void *) &Image[u32Index3][i*8],32);
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 28],(void *) &Image[u32Index3][i*8],32);
 #ifdef __PANEL__				
-	  	  memcpy((void *)&u32FrameData[offset_LCD_tmp + 28],(void *) &Image[u32Index3][i*8],32);	
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 28],(void *) &Image[u32Index3][i*8],32);	
 #endif			
-    }	
+	}	
 }
 
 /**
@@ -243,7 +209,7 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
  **/
 VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offset_LCD, float x, float y)
 {
-    UINT32 start_UVC, start_LCD;
+    UINT32 start_UVC;
 	  INT j;
 	  /* UVC - Up */		
     if(uvcStatus.FrameIndex == UVC_640) //phone
@@ -382,6 +348,7 @@ VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offs
 VOID TempCal(int extend)
 {
 	  int i,j,k,l,offset_LCD,offset_UVC;
+	  unsigned int index,min,max;
 	  UINT32 value,count = 0;
 	  UINT32 u32UVCWidth;
 	  offset_LCD = ((PANEL_HEIGHT - (3*WIDTH*2)) * PANEL_WIDTH /4) + ((PANEL_WIDTH - (3*HEIGHT*2)) /4);
@@ -389,40 +356,49 @@ VOID TempCal(int extend)
 	
 	  u32UVCWidth = extend*WIDTH*2;
       g_i16Ready = 0;
-    g_TDATA_index = (g_TDATA_index ^1) & 0x01;
+	  g_TDATA_index = (g_TDATA_index ^1) & 0x01;
+	  min = GetFramePOIs().minTemPixel.Tmp;
+	  max = GetFramePOIs().maxTemPixel.Tmp;
 	  for(i=0;i<HEIGHT;i++)
 	  { 
 		    for(j=0;j<WIDTH;j++)
 		    {
 			      int index_offset;
-			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732 + (TEMP_OFFSET * 10);
+			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
 			      if(TDATA[g_TDATA_index][count] < 0)
 			      	TDATA[g_TDATA_index][count] = 0;
-			      value  =  TDATA[g_TDATA_index][count] + 600; //add offset here
-			      
-				  count++;
-			      if(value >= 1200)
-				        value = 1199;
+#ifdef COLOR_ADAPTIVE
+				value = TDATA[g_TDATA_index][count];
+				index = abs((signed int)value - min) * 1199 / abs(max - min);
+				// Boundary check
+				if((value-min) > (max-min))
+					index = 1199;
+					
+				value = YUV_ColorTable[index].YUVData;
+#else
+				value  =  TDATA[g_TDATA_index][count] + 600; 
+				value = YUV_ColorTable[value].YUVData;
+#endif			
+
+				count++;
 				
-            value = YUV_ColorTable[value].Data;
-			
-            if(uvcStatus.FrameIndex == UVC_640)
-            {
-                index_offset = i*7*640 + offset_UVC + j*7;
-				
-                for(k=0;k<14;k++)
-                    for(l=0;l<7;l++)
-                        u32Data[g_TDATA_index][index_offset + k*640/2 + l] = value;				
-            }
-            else			
-            {
-                index_offset = i*extend*u32UVCWidth + j*extend;
-                /* UVC */	
-                for(k=0;k<extend*2;k++)
-                    for(l=0;l<extend;l++)
-                        u32Data[g_TDATA_index][index_offset + k*extend*WIDTH + l] = value;
-				
-            }
+				if(uvcStatus.FrameIndex == UVC_640)
+				{
+					index_offset = i*7*640 + offset_UVC + j*7;
+					
+					for(k=0;k<14;k++)
+						for(l=0;l<7;l++)
+							u32Data[g_TDATA_index][index_offset + k*640/2 + l] = value;				
+				}
+				else			
+				{
+					index_offset = i*extend*u32UVCWidth + j*extend;
+					/* UVC */	
+					for(k=0;k<extend*2;k++)
+						for(l=0;l<extend;l++)
+							u32Data[g_TDATA_index][index_offset + k*extend*WIDTH + l] = value;
+					
+				}
 #ifdef __PANEL__					
             /* LCD */		
             index_offset = i*3*PANEL_WIDTH + offset_LCD + j*3;
@@ -432,6 +408,8 @@ VOID TempCal(int extend)
 #endif						
         }
     }
-    TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
-    Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);
+	if(GetTempDisplay() == 1) {
+		TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
+		Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);
+	}
 }

@@ -1,6 +1,6 @@
 /*
- *	SDK Version: Release V2.00 171204
- *	Copyright (C) 2017 MERIDIAN Innovation Limited. All rights reserved.
+ *	SDK Version: Release V2.03 180322
+ *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
 #include "stdint.h"
@@ -11,14 +11,13 @@
 
 #if MCU == 329
 #include <stdlib.h>
-#include "w55fa93_i2c.h"		// Header of i2c- related functions
+#include "w55fa93_i2c.h"						// Header of i2c- related functions
 #include "wbio.h"
 #include "wblib.h"
 
-#define Pixelforth 			256
-#define SENSOR_ADDRESS 		0x1A
-#define EEPROM_ADDRESS 		0x50
-#define TEMP_OFFSET 		4.5 		//Temperature offset
+#define TEMP_OFFSET 		2.0 				//Temperature offset
+#define PANEL_WIDTH			320					/* PANEL Width (Raw data output width for Panel Test) */
+#define PANEL_HEIGHT		240     			/* PANEL Height (Raw data output height for Panel Test) */
 
 typedef unsigned char uchar;
 
@@ -27,20 +26,28 @@ typedef unsigned char uchar;
 #include "thermal_i2c.h"
 #include "usbd_video.h"
 
-#define Pixelforth 			256
 #define TIME_FREQUENCY 		30
-#define SENSOR_ADDRESS 		0x1A
-#define EEPROM_ADDRESS 		0x50
+#define RXBUFSIZE   		2048
+
 #endif
 
+// Pre-set at ThermalSensorAPI.lib
+#define DEADPIXELCOMPENSATE
+#define	POI
 
-#define DEAD_PIXEL_PRO
+//#define COLOR_ADAPTIVE							// Work well for adaptive color palette
+#ifdef COLOR_ADAPTIVE								// If color_adaptive is defined, change color palette here
+	#define	COLORPALETTE_BW_ADAPTIVE			
+#else
+	#define COLORPALETTE0							// COLORPALETTE0-3, refer to Table_UVC.c
+#endif
+
 #define AdrPixCMin 			0x00
 #define AdrPixCMin 			0x00
 #define AdrPixCMax 			0x04
 #define AdrGradScale 		0x08
 #define AdrExponent 		0x0B
-#define AdrTableNumber 		0x0B 		//changed to 0x0B with Rev 0.14 and adpated TN readout
+#define AdrTableNumber 		0x0B 		
 #define AdrEpsilon 			0x0D
 
 #define AdrMBITPixC 		0x1A
@@ -61,8 +68,8 @@ typedef unsigned char uchar;
 
 #define AdrDevID 			0x74
 #define AdrNrOfDefPix 		0x7F
-#define AdrDeadPix 			0x80		//currently reserved space for 24 Pixel
-#define AdrDeadPixMask 		0xB0	//currently reserved space for 24 Pixel
+#define AdrDeadPix 			0x80		
+#define AdrDeadPixMask 		0xB0	
 
 #define AdrGlobalOffset 	0x54
 #define AdrGlobalGain 		0x55
@@ -72,15 +79,19 @@ typedef unsigned char uchar;
 #define AdrTh2 				0xF40
 #define AdrPixC 			0x1740
 
+#define SENSOR_ADDRESS 		0x1A
+#define EEPROM_ADDRESS 		0x50
+
 #define BIAScurrentDefault 	0x05
-#define CLKTRIMDefault 		0x15 //0x20 to let it run with 10 Hz
+#define CLKTRIMDefault 		0x15 				
 #define BPATRIMDefault 		0x0C
 #define PUTRIMDefault		0x88
 
 
 //pixelcount etc. for 32x32d
 #define VERSION				0x12345678
-#define Pixel 				1024				//=32x32
+#define TRANSFER_BUFFER  	32*32*4  
+#define Pixel 				1024				
 #define PixelEighth 		128
 #define ROW 				32
 #define COLUMN 				32
@@ -89,19 +100,35 @@ typedef unsigned char uchar;
 #define W_WIDTH 			2
 #define W_HEIGHT 			2
 #define PTATamount 			8
-#define ELOFFSET 			1024			//start address of el. Offset
+#define ELOFFSET 			1024				
 #define ELAMOUNT 			256
 #define ELAMOUNTHALF 		128
 #define StackSize 			16
+#define DATALength 			1292
 #define PTATSTARTADSRESS 	1282//1090
 #define VDDADDRESS 			1280
+#define Pixelforth 			256
+#define RECT_SIZE 			14
+#define TOTAL_COLOR_NUM		1200
+#define COLOR_OFFSET 		600
 
-#define GetElEveryFrameX 	10		//amount of normal frames to capture after which the el. Offset is fetched
-#define STACKSIZEPTAT 		30		//should be an even number
-#define STACKSIZEVDD 		50			//should be an even number
+#define GetElEveryFrameX 	10					
+#define STACKSIZEPTAT 		30			
+#define STACKSIZEVDD 		50			
 #define VddStackAmount 		30
 #define MAXNROFDEFECTS  	24
 
+enum peri_interface{HUART = 0, UART, SPI};
+
+typedef struct YUV_COLOR_INFO_T{
+	unsigned int 			YUVData;
+}YUV_COLOR_INFO_T;
+
+typedef struct RGB_COLOR_INFO_T{
+	unsigned char 			R;
+	unsigned char 			G;
+	unsigned char 			B;
+}RGB_COLOR_INFO_T;
 typedef struct REGISTERSETTING{
 	unsigned short 			MBIT;
 	unsigned short 			BIAS;
@@ -152,6 +179,23 @@ typedef struct SENSORSETTING{
 	unsigned int* 			YADValues;
 } SENSORSETTING;
 
+typedef struct TEMPIXEL{
+	unsigned short 			x;
+	unsigned short			y;
+	signed short			Tmp;
+} TEMPIXEL;
+
+typedef struct FRAMEPOI {
+	TEMPIXEL				maxTemPixel;
+	TEMPIXEL				minTemPixel;
+} FRAMEPOIS;
+
+
+
+/*
+*	API
+*/
+
 void 			InitI2C(unsigned char mode);
 void 			HighDensSequentialRead(unsigned short address,unsigned char* data, unsigned short numbytes);
 void 			HighDensPageWrite(unsigned short address,unsigned char *data, unsigned short numbytes);
@@ -166,5 +210,11 @@ void 			InitCLKTRIMN(unsigned char user);
 
 void 			GetImageData(void);
 unsigned short 	GetTemp(unsigned int x, unsigned int y);
+FRAMEPOIS		GetFramePOIs(void);
+unsigned short	GetTempDisplay(void);
+int 			GetTargetPixelIndex(void);
 unsigned int 	CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 unsigned int 	StartStreaming(int Mode, char Temps,char Stream);
+void		 	SetTempDisplay(unsigned short flag);
+void			SetTargetPixelIndex(int index);
+void			ResetFramePOIs(void);

@@ -18,10 +18,6 @@ __align(4) UINT32 u32Data[2][0x25800];
 #ifdef __PANEL__
 __align(4) UINT32 u32FrameData[0x25800];
 #endif
-
-extern INT32 g_TDATA_index;  
-extern __align(4) short TDATA[2][1024];
-
 INT32 g_extend;   
 
 /* UVC event */
@@ -60,7 +56,5 @@ void uvcdEvent(UINT8 u8index)
         }			
         /* Send Image */	
         uvcdSendImage((UINT32)&u32Data[u8index], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
-		
-
     }  
 }

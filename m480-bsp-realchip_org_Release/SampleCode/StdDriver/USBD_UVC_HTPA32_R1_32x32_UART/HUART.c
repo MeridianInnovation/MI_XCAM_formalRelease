@@ -6,9 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "M480.h"
-#include "demo.h"
+#include "ThermalSensor.h"
 
-extern int g_i16TempAvg, g_i16Ready,g_TDATA_index; 
+extern int g_i16DisTemp, g_i16Ready,g_TDATA_index; 
 extern short TDATA[2][1024];
 
 void UartDataValid_Handler(uint8_t* buf, uint32_t u32Len);
@@ -25,8 +25,8 @@ void UartDataValid_Handler(uint8_t* buf, uint32_t u32Len)
         {
             if(pu32Cmd[1] == 0x4756413D)
             {	
-                printf("TempAvg %04X\n",g_i16TempAvg);
-                UART_Write(UART1,(uint8_t *)&g_i16TempAvg,  2);				
+                printf("TempAvg %04X\n",g_i16DisTemp);
+                UART_Write(UART1,(uint8_t *)&g_i16DisTemp,  2);				
             }
             else if(pu32Cmd[1] == 0x4154533D)
             {	

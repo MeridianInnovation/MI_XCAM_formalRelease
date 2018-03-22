@@ -364,7 +364,7 @@
               <MiscControls></MiscControls>
               <Define>MCU=329</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\lib;..\..\..\..\SYSLIB\Lib;..\..\..\..\I2C\lib;..\..\..\..\UDC\lib;..\..\..\..\VPOST\Lib;..\..\..\..\GPIO\lib;..\I2CS;..\..\..\..\ThermalAPI_inC\example\demo\KEIL;..\..\..\..\..\MI_Sensor</IncludePath>
+              <IncludePath>..\..\..\lib;..\..\..\..\SYSLIB\Lib;..\..\..\..\I2C\lib;..\..\..\..\UDC\lib;..\..\..\..\VPOST\Lib;..\I2CS;..\..\..\..\ThermalAPI_inC\example\demo\KEIL;..\..\..\..\..\MI_Sensor</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -428,14 +428,14 @@
               <FilePath>..\..\..\lib\w55fa93_UVC_YUV_Only.lib</FilePath>
             </File>
             <File>
-              <FileName>DrvI2C.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\I2CS\DrvI2C.c</FilePath>
-            </File>
-            <File>
               <FileName>ThermalSensorAPI_N329.lib</FileName>
               <FileType>4</FileType>
               <FilePath>..\..\..\..\ThermalAPI_inC\example\demo\KEIL\demo_Data\N32901_SingleTask\ThermalSensorAPI_N329.lib</FilePath>
+            </File>
+            <File>
+              <FileName>DrvI2C_Thermal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\I2CS\DrvI2C_Thermal.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -451,11 +451,6 @@
               <FileName>wb_init.s</FileName>
               <FileType>2</FileType>
               <FilePath>..\wb_init.s</FilePath>
-            </File>
-            <File>
-              <FileName>HUART.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HUART.c</FilePath>
             </File>
             <File>
               <FileName>main.c</FileName>

@@ -9,7 +9,8 @@
  ******************************************************************************/
 
 #include "ThermalSensor.h"
-#include "demo.h"
+void draw_init(void);
+void draw_display(uint32_t u32Count, uint32_t temp_avg);
 
 __align(4) uint32_t u32Data[TRANSFER_BUFFER/4];
  
@@ -22,7 +23,7 @@ volatile uint8_t g_final = 0;
 uint32_t g_u32AltInterface = 0;
 uint32_t g_max_packet_size;
 uint32_t volatile g_extend;  
-int g_i16TempAvg, g_i16Ready = 0, g_TDATA_index = 0; 
+int g_i16DisTemp, g_i16Ready = 0, g_TDATA_index = 0; 
 	
 /* Current Frame Index */
 uint32_t g_u32CurFrameIndex = 1;
@@ -44,7 +45,6 @@ signed short* ptempBuff = (signed short*)&tempBuff;
 	
 /* Size per USB transfer */	
 uint32_t g_transfer_size;	
-extern short TDATA[2][1024];
 
 #define SetUVCHEADER(data) 			HSUSBD->RESERVE2[1] = data
 #define SetUVCCount(no) 				HSUSBD->RESERVE2[4] = no
@@ -1039,19 +1039,27 @@ int uvcdSendImage(uint32_t u32Addr, uint32_t u32transferSize, int bStillImage, i
 uint32_t TempAvg(int index)  /* Temperature Average */
 {
     uint32_t start, sum = 0,i,j;
-		int val;
+	int val;
     /* Temperature Average */	
-    start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
-    for(i=0;i<W_HEIGHT;i++)
-        for(j=0;j<W_WIDTH;j++)
-				{	
-					val = Target[index][start + i* WIDTH + j] - 2732;
-					if ( val < 0 )
-						val = 0;
-          sum = sum + val;
-				}
-    sum = sum / W_HEIGHT / W_WIDTH;
+	if(GetTargetPixelIndex() == -1) {
+		start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
+		for(i=0;i<W_HEIGHT;i++)
+		{
+			for(j=0;j<W_WIDTH;j++)
+			{	
+				val = Target[index][start + i* WIDTH + j] - 2732;
+				if ( val < 0 )
+					val = 0;
+				sum = sum + val;
+			}
+		}
+		sum = sum / W_HEIGHT / W_WIDTH;
+	}
+	else
+		sum = GetTemp(GetTargetPixelIndex()%WIDTH,GetTargetPixelIndex()/WIDTH);
 		
+//	sum = (uint32_t) GetFramePOIs().minTemPixel.Tmp;
+
     return sum;
 }
 
@@ -1060,13 +1068,6 @@ void TempAvgDisplay(uint32_t u32Count, uint32_t sum, int mode)  /* Temperature A
     int i,j;
     uint32_t u32Index0 = 0, u32Index1 = 0, u32Index2 = 0;
     u32Count = u32Count /4;
-	
-	// Single pixel
-//	pixTemp = GetTemp(1,1);
-	
-	// pointer to 2D-array
-//	ptempBuff = (signed short*) &Target;
-//	sum = (uint32_t) *(ptempBuff +  1*(sizeof(Target[0])) + 1 * (sizeof(signed short))) - 2732;
 	
     if(mode == 1)
     {
@@ -1158,8 +1159,8 @@ void UVC_Transfer_Init(void)
 void uvcdEvent(int index)  /* UVC event */
 {
     uint32_t volatile i, j, k, l, transfer_row_index, temp_avg, u32DataCount;
-    uint32_t u32RemainSize;   
-    uint32_t value, index_offset;
+    uint32_t u32RemainSize, value;   
+    uint32_t index_offset;
     int32_t val,count;
 
     if (uvcStatus.appConnected == 1)
@@ -1183,7 +1184,7 @@ void uvcdEvent(int index)  /* UVC event */
                         u32Data[i] = 0x80008000;//0x80FF80FF;											
                     break;													
             } 				
-						UVC_Transfer_Init();
+			UVC_Transfer_Init();
         }
 				
         u32DataCount = 0;
@@ -1216,88 +1217,97 @@ void uvcdEvent(int index)  /* UVC event */
             TempAvgDisplay(u32Count, temp_avg,0);
             u32RemainSize -= u32Count;
         }
-        transfer_row_index = 0;
-        count = 0;
-        for(i=0;i<HEIGHT;i++)
-        {
-            for(j=0;j<WIDTH;j++)
-            {
-							val = TDATA[index][count] = Target[j][i] - 2732;    
-							if ( val < 0 )
-							{            
-			val = TDATA[index][count] = 0;
-		}
-		val += COLOR_OFFSET;
-		if (val >= TOTAL_COLOR_NUM)
-			val = TOTAL_COLOR_NUM-1;						 
-		count++;			 
-		value = YUV_ColorTable[val].YUVData;
-                if(uvcStatus.FrameIndex == UVC_FRAME3)
-                {									
-                    index_offset = transfer_row_index*7*640 + g_offset_UVC + j*7; 
-										
-                    for(k=0;k<14;k++)
-                        for(l=0;l<7;l++)
-                        {
-                            u32Data[index_offset + k*640/2 + l] = value;		
-                        }
-                }
-                else			
-                {
-                    index_offset = transfer_row_index*g_extend*g_u32UVCWidth + j*g_extend;
-                    /* UVC */	
-                    for(k=0;k<g_extend*2;k++)
-                        for(l=0;l<g_extend;l++)
-                        {
-                            u32Data[index_offset + k*g_extend*WIDTH + l] = value;	
-                        }
-                }						 
-            }
-            if(transfer_row_index == (g_u32transfer_row -1) || (i == HEIGHT - 1))
-            {												
-                transfer_row_index = 0;
-                /* Send Image */													
-                if(i == HEIGHT - 1)
-                {
-                    if(uvcStatus.FrameIndex == UVC_FRAME3)
-                    {											
-                        for(i=0;i<TRANSFER_BUFFER/4;i++)
-                            u32Data[i] = 0x80008000;//0x80FF80FF;			
+			transfer_row_index = 0;
+			count = 0;
+			for(i=0;i<HEIGHT;i++)
+			{
+				for(j=0;j<WIDTH;j++)
+				{
+					value = TDATA[index][count] = Target[j][i] - 2732; 
+					// index fine tuning
+#ifdef COLOR_ADAPTIVE
+					int32_t max,min;
+					max = GetFramePOIs().maxTemPixel.Tmp;
+					min = GetFramePOIs().minTemPixel.Tmp;
+					val = abs((signed int)value - min) * 1199 / abs(max - min);
+#else					
+					val = value + COLOR_OFFSET;	
+					//val = value;
+#endif						
+					// Boundry checking
+					if ( val < 0 )         
+						val = TDATA[index][count] = 0;
+					else if( val >= TOTAL_COLOR_NUM )
+						val = TOTAL_COLOR_NUM-1;	
+						
+					count++;			 
+					value = YUV_ColorTable[val].YUVData;
+					if(uvcStatus.FrameIndex == UVC_FRAME3)
+					{									
+						index_offset = transfer_row_index*7*640 + g_offset_UVC + j*7; 
+											
+						for(k=0;k<14;k++)
+							for(l=0;l<7;l++)
+							{
+								u32Data[index_offset + k*640/2 + l] = value;		
+							}
+					}
+					else			
+					{
+						index_offset = transfer_row_index*g_extend*g_u32UVCWidth + j*g_extend;
+						/* UVC */	
+						for(k=0;k<g_extend*2;k++)
+							for(l=0;l<g_extend;l++)
+							{
+								u32Data[index_offset + k*g_extend*WIDTH + l] = value;	
+							}
+					}
+				}
+				if(transfer_row_index == (g_u32transfer_row -1) || (i == HEIGHT - 1))
+				{												
+					transfer_row_index = 0;
+					/* Send Image */													
+					if(i == HEIGHT - 1)
+					{
+						if(uvcStatus.FrameIndex == UVC_FRAME3)
+						{											
+							for(i=0;i<TRANSFER_BUFFER/4;i++)
+								u32Data[i] = 0x80008000;//0x80FF80FF;			
 
-                        while(u32RemainSize > g_transfer_size)
-                        {													
-                            u32DataCount += g_transfer_size; 
-                            draw_display(u32DataCount, temp_avg);
-                            uvcdSendImage((uint32_t)u32Data, g_transfer_size, uvcStatus.StillImage,0);
-                            u32RemainSize -= g_transfer_size;														
-                            /* Wait for Complete */ 	
-                            while(!uvcdIsReady());		
-                        }
-                        u32DataCount += u32RemainSize; 
-                        draw_display(u32DataCount, temp_avg);				
-                        uvcdSendImage((uint32_t)u32Data, u32RemainSize, uvcStatus.StillImage,1);			
-                        	
-                    }
-                    else
-                    {											
-                        u32DataCount += u32RemainSize; 
-                        draw_display(u32DataCount, temp_avg);
-                        uvcdSendImage((uint32_t)u32Data, u32RemainSize, uvcStatus.StillImage,1);										
-                    }
-                }
-                else					
-                {
-                    u32DataCount += g_transfer_size; 
-                    draw_display(u32DataCount, temp_avg);
-                    uvcdSendImage((uint32_t)u32Data, g_transfer_size, uvcStatus.StillImage,0);
-                    u32RemainSize -= g_transfer_size;
-                }
-                /* Wait for Complete */ 	
-                while(!uvcdIsReady());		
-            }
-            else
-                transfer_row_index++;	
-        }	 
+							while(u32RemainSize > g_transfer_size)
+							{													
+								u32DataCount += g_transfer_size; 
+								draw_display(u32DataCount, temp_avg);
+								uvcdSendImage((uint32_t)u32Data, g_transfer_size, uvcStatus.StillImage,0);
+								u32RemainSize -= g_transfer_size;														
+								/* Wait for Complete */ 	
+								while(!uvcdIsReady());		
+							}
+							u32DataCount += u32RemainSize; 
+							draw_display(u32DataCount, temp_avg);				
+							uvcdSendImage((uint32_t)u32Data, u32RemainSize, uvcStatus.StillImage,1);			
+								
+						}
+						else
+						{											
+							u32DataCount += u32RemainSize; 
+							draw_display(u32DataCount, temp_avg);
+							uvcdSendImage((uint32_t)u32Data, u32RemainSize, uvcStatus.StillImage,1);										
+						}
+					}
+					else					
+					{
+						u32DataCount += g_transfer_size; 
+						draw_display(u32DataCount, temp_avg);
+						uvcdSendImage((uint32_t)u32Data, g_transfer_size, uvcStatus.StillImage,0);
+						u32RemainSize -= g_transfer_size;
+					}
+					/* Wait for Complete */ 	
+					while(!uvcdIsReady());		
+				}
+				else
+					transfer_row_index++;	
+			}	 
     }  
 }
 void draw_init(void)
@@ -1324,10 +1334,12 @@ void draw_init(void)
 }
 void draw_display(uint32_t u32Count, uint32_t temp_avg)
 {
-    if(g_u8temp_display == 0)
-        TempAvgDisplay(u32Count, temp_avg, 1);
-								
-    draw_rectangle(u32Count);	
+	if(GetTempDisplay() == 1) {
+		if(g_u8temp_display == 0)
+			TempAvgDisplay(u32Count, temp_avg, 1);
+									
+		draw_rectangle(u32Count);	
+	}
 }
 
 void draw_rectangle(uint32_t u32Count)
@@ -1419,15 +1431,14 @@ void create_color_table(void) /* Create Color table and data for transfer */
     {
 			for(j=0;j<20;j++)
 			{
-				RVal = (unsigned char)((float)RGB_ColorTable0[i].R  + ((float)RGB_ColorTable0[i+1].R - (float)RGB_ColorTable0[i].R) /20*j); 	
-				GVal = (unsigned char)((float)RGB_ColorTable0[i].G  + ((float)RGB_ColorTable0[i+1].G - (float)RGB_ColorTable0[i].G) /20*j); 	
-				BVal = (unsigned char)((float)RGB_ColorTable0[i].B  + ((float)RGB_ColorTable0[i+1].B - (float)RGB_ColorTable0[i].B) /20*j); 
+				RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /20*j); 	
+				GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /20*j); 	
+				BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /20*j); 
 				Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
 				Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
 				Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
 				YUV_ColorTable[i*20+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
 			}				
     }	
-	
 }
 

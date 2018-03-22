@@ -7,19 +7,19 @@
 
   <Targets>
     <Target>
-      <TargetName>USBD_UVC_HTAP32</TargetName>
+      <TargetName>N32901_SW_I2C</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>M487JIDAE</Device>
-          <Vendor>Nuvoton</Vendor>
-          <Cpu>IRAM(0x20000000-0x2001FFFF) IROM(0-0x7FFFF) CLOCK(84000000) CPUTYPE("Cortex-M4") FPU2</Cpu>
+          <Device>TMPA900CMXBG</Device>
+          <Vendor>Toshiba</Vendor>
+          <Cpu>IRAM(0xF8002000-0xF8009FFF) CLOCK(24000000) CPUTYPE(ARM926EJ-S)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
-          <StartupFile>undefined</StartupFile>
+          <StartupFile>"STARTUP\Toshiba\TMPA900.s" ("Toshiba TMPA910 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>0</DeviceId>
-          <RegisterFile></RegisterFile>
+          <DeviceId>4898</DeviceId>
+          <RegisterFile>TMPA900.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -29,14 +29,14 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>SFD\Nuvoton\M481_v1.SFR</SFDFile>
+          <SFDFile></SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
           <IncludePath></IncludePath>
           <LibPath></LibPath>
-          <RegisterFilePath></RegisterFilePath>
-          <DBRegisterFilePath></DBRegisterFilePath>
+          <RegisterFilePath>Toshiba\</RegisterFilePath>
+          <DBRegisterFilePath>Toshiba\</DBRegisterFilePath>
           <TargetStatus>
             <Error>0</Error>
             <ExitCodeStop>0</ExitCodeStop>
@@ -44,14 +44,14 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>.\obj\</OutputDirectory>
-          <OutputName>MI_XCAM_M480</OutputName>
+          <OutputDirectory>.\HTPA32\MI_XCAM_N329_SW_I2C\</OutputDirectory>
+          <OutputName>MI_XCAM_N329_SW_I2C</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>0</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
-          <ListingPath>.\lst\</ListingPath>
+          <ListingPath>.\HTPA32\MI_XCAM_N329_SW_I2C\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
@@ -77,13 +77,13 @@
           </BeforeMake>
           <AfterMake>
             <RunUserProg1>1</RunUserProg1>
-            <RunUserProg2>1</RunUserProg2>
-            <UserProg1Name>fromelf --bin ".\obj\@L.axf" --output ".\obj\@L.bin"</UserProg1Name>
-            <UserProg2Name>fromelf --text -c ".\obj\@L.axf" --output ".\obj\@L.txt"</UserProg2Name>
+            <RunUserProg2>0</RunUserProg2>
+            <UserProg1Name>fromelf.exe --bin --output "$L@L.bin" "$L@L.axf"</UserProg1Name>
+            <UserProg2Name></UserProg2Name>
             <UserProg1Dos16Mode>0</UserProg1Dos16Mode>
             <UserProg2Dos16Mode>0</UserProg2Dos16Mode>
           </AfterMake>
-          <SelectedForBatchBuild>1</SelectedForBatchBuild>
+          <SelectedForBatchBuild>0</SelectedForBatchBuild>
           <SVCSIdString></SVCSIdString>
         </TargetCommonOption>
         <CommonProperty>
@@ -103,14 +103,14 @@
           <ComprImg>1</ComprImg>
         </CommonProperty>
         <DllOption>
-          <SimDllName>SARMCM3.DLL</SimDllName>
-          <SimDllArguments></SimDllArguments>
-          <SimDlgDll>DARMCM1.DLL</SimDlgDll>
-          <SimDlgDllArguments></SimDlgDllArguments>
-          <TargetDllName>SARMCM3.DLL</TargetDllName>
+          <SimDllName>SARM.DLL</SimDllName>
+          <SimDllArguments>-cAT91SAM9</SimDllArguments>
+          <SimDlgDll>DARMATS9.DLL</SimDlgDll>
+          <SimDlgDllArguments>-p91SAM9260</SimDlgDllArguments>
+          <TargetDllName>SARM.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
-          <TargetDlgDll>TARMCM1.DLL</TargetDlgDll>
-          <TargetDlgDllArguments></TargetDlgDllArguments>
+          <TargetDlgDll>TARMATS9.DLL</TargetDlgDll>
+          <TargetDlgDllArguments>-p91SAM9260</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -145,7 +145,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>15</TargetSelection>
+          <TargetSelection>5</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -158,8 +158,8 @@
             <CpuDllArguments></CpuDllArguments>
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
-            <InitializationFile>..\..\..\..\..\..\..\AMCAP_FrameRate.EXE</InitializationFile>
-            <Driver>Bin\Nu_Link.dll</Driver>
+            <InitializationFile>..\..\..\..\N32901\N32901.ini</InitializationFile>
+            <Driver>Segger\JLTAgdi.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -167,12 +167,12 @@
             <UseTargetDll>1</UseTargetDll>
             <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
-            <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
+            <UpdateFlashBeforeDebugging>0</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>4107</DriverSelection>
+            <DriverSelection>4098</DriverSelection>
           </Flash1>
           <bUseTDR>0</bUseTDR>
-          <Flash2>Bin\Nu_Link.dll</Flash2>
+          <Flash2>Segger\JLTAgdi.dll</Flash2>
           <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
@@ -208,24 +208,24 @@
             <AdsLven>1</AdsLven>
             <AdsLsxf>1</AdsLsxf>
             <RvctClst>0</RvctClst>
-            <GenPPlst>1</GenPPlst>
-            <AdsCpuType>"Cortex-M4"</AdsCpuType>
+            <GenPPlst>0</GenPPlst>
+            <AdsCpuType>ARM926EJ-S</AdsCpuType>
             <RvctDeviceName></RvctDeviceName>
             <mOS>0</mOS>
             <uocRom>0</uocRom>
             <uocRam>0</uocRam>
-            <hadIROM>1</hadIROM>
+            <hadIROM>0</hadIROM>
             <hadIRAM>1</hadIRAM>
             <hadXRAM>0</hadXRAM>
             <uocXRam>0</uocXRam>
-            <RvdsVP>2</RvdsVP>
+            <RvdsVP>0</RvdsVP>
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
-            <StupSel>8</StupSel>
-            <useUlib>1</useUlib>
+            <StupSel>0</StupSel>
+            <useUlib>0</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
-            <RoSelD>3</RoSelD>
+            <RoSelD>0</RoSelD>
             <RwSelD>3</RwSelD>
             <CodeSel>0</CodeSel>
             <OptFeed>0</OptFeed>
@@ -237,7 +237,7 @@
             <Ro1Chk>0</Ro1Chk>
             <Ro2Chk>0</Ro2Chk>
             <Ro3Chk>0</Ro3Chk>
-            <Ir1Chk>1</Ir1Chk>
+            <Ir1Chk>0</Ir1Chk>
             <Ir2Chk>0</Ir2Chk>
             <Ra1Chk>0</Ra1Chk>
             <Ra2Chk>0</Ra2Chk>
@@ -277,13 +277,13 @@
               </Ocm6>
               <IRAM>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0x20000</Size>
+                <StartAddress>0xf8002000</StartAddress>
+                <Size>0x8000</Size>
               </IRAM>
               <IROM>
-                <Type>1</Type>
+                <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x80000</Size>
+                <Size>0x0</Size>
               </IROM>
               <XRAM>
                 <Type>0</Type>
@@ -308,7 +308,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x80000</Size>
+                <Size>0x0</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -332,8 +332,8 @@
               </OCR_RVCT8>
               <OCR_RVCT9>
                 <Type>0</Type>
-                <StartAddress>0x20000000</StartAddress>
-                <Size>0x20000</Size>
+                <StartAddress>0xf8002000</StartAddress>
+                <Size>0x8000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -361,16 +361,16 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>MCU=480</Define>
+              <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\..\..\Library\CMSIS\Include;..\..\..\..\Library\Device\Nuvoton\M480\Include;..\..\..\..\Library\StdDriver\inc;..\..\..\..\Library\ThermalAPI_inC\inc;..\..\USBD_UVC_HTPA32_R1_32x32_UART;..\..\..\..\..\MI_Sensor</IncludePath>
+              <IncludePath>..\..\..\lib;..\..\..\..\SYSLIB\Lib;..\..\..\..\I2C\lib;..\..\..\..\UDC\lib;..\..\..\..\VPOST\Lib;..\..\..\..\GPIO\lib;..\I2CS;..\..\..\..\VideoIn\Lib;..\VIN;..\..\..\..\ThermalAPI_inC\example\demo\KEIL;..\..\..\..\..\MI_Sensor</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
             <interw>1</interw>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <thumb>1</thumb>
+            <thumb>0</thumb>
             <SplitLS>0</SplitLS>
             <SwStkChk>0</SwStkChk>
             <NoWarn>0</NoWarn>
@@ -378,7 +378,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>N32901</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
@@ -391,12 +391,12 @@
             <RepFail>1</RepFail>
             <useFile>0</useFile>
             <TextAddressRange>0x00000000</TextAddressRange>
-            <DataAddressRange>0x20000000</DataAddressRange>
+            <DataAddressRange>0xF80002000</DataAddressRange>
             <pXoBase></pXoBase>
-            <ScatterFile></ScatterFile>
+            <ScatterFile>..\..\..\..\N32901\N32901.sct</ScatterFile>
             <IncludeLibs></IncludeLibs>
             <IncludeLibsPath></IncludeLibsPath>
-            <Misc>--map --first='startup_M480.o(RESET)' --datacompressor=off --info=inline --entry Reset_Handler</Misc>
+            <Misc>--entry 0</Misc>
             <LinkerInputFile></LinkerInputFile>
             <DisabledWarnings></DisabledWarnings>
           </LDads>
@@ -404,97 +404,102 @@
       </TargetOption>
       <Groups>
         <Group>
-          <GroupName>CMSIS</GroupName>
+          <GroupName>Lib</GroupName>
           <Files>
             <File>
-              <FileName>system_M480.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\Device\Nuvoton\M480\Source\system_M480.c</FilePath>
+              <FileName>w55fa93_UDC.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\UDC\lib\w55fa93_UDC.lib</FilePath>
             </File>
             <File>
-              <FileName>startup_M480.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\..\..\..\Library\Device\Nuvoton\M480\Source\ARM\startup_M480.s</FilePath>
+              <FileName>W55FA93_syslib.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\SYSLIB\Lib\W55FA93_syslib.lib</FilePath>
+            </File>
+            <File>
+              <FileName>W55FA93_VPOST.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\VPOST\Lib\W55FA93_VPOST.lib</FilePath>
+            </File>
+            <File>
+              <FileName>w55fa93_UVC_YUV_Only.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\lib\w55fa93_UVC_YUV_Only.lib</FilePath>
+            </File>
+            <File>
+              <FileName>DrvI2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\I2CS\DrvI2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>w55fa93_gpio.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\gpio\lib\w55fa93_gpio.lib</FilePath>
+            </File>
+            <File>
+              <FileName>W55FA93_VideoIn.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\VideoIn\Lib\W55FA93_VideoIn.lib</FilePath>
+            </File>
+            <File>
+              <FileName>DrvI2C_Thermal.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\I2CS\DrvI2C_Thermal.c</FilePath>
+            </File>
+            <File>
+              <FileName>ThermalSensorAPI_N329.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\..\..\ThermalAPI_inC\example\demo\KEIL\demo_Data\N32901_SingleTask\ThermalSensorAPI_N329.lib</FilePath>
             </File>
           </Files>
         </Group>
         <Group>
-          <GroupName>User</GroupName>
+          <GroupName>Source</GroupName>
           <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>descriptors.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\descriptors.c</FilePath>
-            </File>
-            <File>
-              <FileName>usbd_video.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\usbd_video.c</FilePath>
-            </File>
             <File>
               <FileName>Table_UVC.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Table_UVC.c</FilePath>
             </File>
             <File>
-              <FileName>HUART.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\HUART.c</FilePath>
+              <FileName>wb_init.s</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\wb_init.s</FilePath>
             </File>
             <File>
-              <FileName>thermal_i2c.c</FileName>
+              <FileName>standalone.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\thermal_i2c.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Library</GroupName>
-          <Files>
-            <File>
-              <FileName>clk.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\clk.c</FilePath>
+              <FilePath>..\standalone.c</FilePath>
             </File>
             <File>
-              <FileName>retarget.c</FileName>
+              <FileName>VIN_demo.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\retarget.c</FilePath>
+              <FilePath>..\VIN\VIN_demo.c</FilePath>
             </File>
             <File>
-              <FileName>sys.c</FileName>
+              <FileName>Smpl_FSC_Ov7740.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\sys.c</FilePath>
+              <FilePath>..\VIN\Smpl_FSC_Ov7740.c</FilePath>
             </File>
             <File>
-              <FileName>i2c.c</FileName>
+              <FileName>Smpl_I2C.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\i2c.c</FilePath>
+              <FilePath>..\VIN\Smpl_I2C.c</FilePath>
             </File>
             <File>
-              <FileName>timer.c</FileName>
+              <FileName>GCD.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\timer.c</FilePath>
+              <FilePath>..\VIN\GCD.c</FilePath>
             </File>
             <File>
-              <FileName>uart.c</FileName>
+              <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\uart.c</FilePath>
+              <FilePath>..\main.c</FilePath>
             </File>
             <File>
-              <FileName>ThermalSensorAPI_M480.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\..\..\..\Library\ThermalAPI_inC\KEIL\obj\ThermalSensorAPI_M480.lib</FilePath>
-            </File>
-            <File>
-              <FileName>hsusbd.c</FileName>
+              <FileName>usbd_video.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\..\..\Library\StdDriver\src\hsusbd.c</FilePath>
+              <FilePath>..\usbd_video.c</FilePath>
             </File>
           </Files>
         </Group>

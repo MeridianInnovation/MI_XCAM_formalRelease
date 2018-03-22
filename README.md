@@ -1,11 +1,11 @@
-# MI_XCAM_171205_formalRelease
+# MI_XCAM_180322_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
 There are two series MCU: M480 & N329-
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V2.01 171208
+SDK Version: Release V3.01 180322
 
 # API
 
@@ -68,3 +68,8 @@ Soultion: Probably it is because the path is too long, which may cause problem. 
 -	(N329) Can I output Uart/Huart data without opening XCAM?
 
 Solution: You may try to move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
+
+
+-	Temperature accuracy
+
+The temperature is not fine tuned at protyping stage.

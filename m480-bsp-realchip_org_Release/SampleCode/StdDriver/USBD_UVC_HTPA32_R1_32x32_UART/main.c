@@ -1,14 +1,10 @@
 #include "ThermalSensor.h"
 
-#define RXBUFSIZE   2048
 uint8_t g_u8RecData[RXBUFSIZE]  = {0};
 
 volatile uint32_t g_u32comRbytes = 0;
 volatile uint32_t g_u32comRhead  = 0;
 volatile uint32_t g_u32comRtail  = 0;
-
-uint8_t g_u8RecData0[RXBUFSIZE]  = {0};
-
 volatile uint32_t g_u32comRbytes0 = 0;
 volatile uint32_t g_u32comRhead0  = 0;
 volatile uint32_t g_u32comRtail0  = 0;
@@ -16,11 +12,13 @@ volatile uint32_t g_u32comRtail0  = 0;
 void UART_TEST_HANDLE(void);
 
 extern uint32_t volatile g_extend;
-extern short TDATA[2][1024];
+extern uint32_t 	g_i16DisTemp, g_i16Ready, g_TDATA_index; 
+extern YUV_COLOR_INFO_T YUV_ColorTable[1200];
 extern signed short Target[32][32];
 extern int time_no;
 extern void UartDataValid_Handler(uint8_t* buf, uint32_t u32Len);
 extern void UVC_Transfer_Init(void);
+
 void SYS_Init(void)
 {
 	int i;
@@ -143,13 +141,8 @@ void UART_TEST_HANDLE()
 }
 
 int main(void)
-{
-	extern uint32_t 	g_i16TempAvg, g_i16Ready, g_TDATA_index; 
-	extern short 		TDATA[2][1024];
-	bool 				isSensorClose=false;	
-
+{	
     /* Init System, IP clock and multi-function I/O */
-
     SYS_Init();
 	
     /* Init UART to 115200-8n1 for print message */
@@ -170,10 +163,12 @@ int main(void)
 
     g_extend = 192/2/WIDTH;
     UVC_Transfer_Init();
+	
+	// Hide temperature display
+//	SetTempDisplay(0);
 		
-	while(!isSensorClose) {
+	while(true) {
+		ResetFramePOIs();
 		M480_StartSensor();
-//		if(GetTemp(0,0,0x00) == 300) 	// You can modify with another end condition
-//			isSensorClose = true;
 	}			
 }

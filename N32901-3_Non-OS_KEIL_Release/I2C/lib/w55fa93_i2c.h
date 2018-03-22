@@ -96,4 +96,9 @@ extern INT32 i2cWrite(PUINT8 buf, UINT32 len);
 extern INT32 i2cIoctl(UINT32 cmd, UINT32 arg0, UINT32 arg1);
 extern INT32 i2cExit(void);
 
+extern INT32 i2cOpen_Thermal(void);
+extern INT32 i2cIoctl_Thermal(UINT32 cmd, UINT32 arg0, UINT32 arg1);
+extern INT32 i2cWrite_Thermal(PUINT8 buf, UINT32 len);
+extern INT32 i2cRead_Thermal(PUINT8 buf, UINT32 len);
+
 #endif
