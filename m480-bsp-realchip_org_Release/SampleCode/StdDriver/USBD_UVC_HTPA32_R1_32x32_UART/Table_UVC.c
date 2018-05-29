@@ -1,7 +1,7 @@
 #include "ThermalSensor.h"
 
 #ifdef COLORPALETTE0
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	176, 	0,		240},	//	0.25
 	{	142,	0,		240},	//	0.75
 	{	108,	0,		240},	//	1.25
@@ -69,7 +69,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 
 #endif
 #ifdef COLORPALETTE1
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	0,		240,	0},	//	0.25
 	{	0,		240,	0},	//	0.75
 	{	0,		240,	0},	//	1.25
@@ -136,7 +136,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 
 #endif
 #ifdef COLORPALETTE2
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	240,	0,	176},	//	0.25
 	{	240,	0,	142},	//	0.75
 	{	240,	0,	108},	//	1.25
@@ -202,7 +202,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 
 #endif
 #ifdef COLORPALETTE3
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	0,		0,		0},	//	0.25
 	{	0,		0,		0},	//	0.75
 	{	0,		0,		0},	//	1.25
@@ -267,7 +267,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 };
 #endif
 #ifdef COLORPALETTE_BW_STEP25
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	0,		0,		0},	//	0.25
 	{	0,		0,		0},	//	0.75
 	{	0,		0,		0},	//	1.25
@@ -332,7 +332,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 };
 #endif
 #ifdef COLORPALETTE_BW_STEP10
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	0,		0,		0},	//	0.25
 	{	0,		0,		0},	//	0.75
 	{	0,		0,		0},	//	1.25
@@ -398,7 +398,7 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 #endif
 
 #ifdef COLORPALETTE_BW_ADAPTIVE
-RGB_COLOR_INFO_T RGB_ColorPalette[61]={
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE]={
 	{	0,		0,		0},	//	0.25
 	{	4,		4,		4},	//	0.75
 	{	8,		8,		8},	//	1.25
@@ -463,10 +463,28 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 };
 #endif
 
-RGB_COLOR_INFO_T RGB_ColorTable[1200]={0
+#ifdef COLORPALETTE0_WIDERANGE
+RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTEADAPTIVESIZE]={
+	{	0,		0,		0},
+	{	45,		42,		123},	
+	{	55,		181,		74},
+	{	243,		236,		25},
+	{	247,		145,		47},	
+	{	233,		29,		38},	
+	{	153,		76,		0},
+	{	127,		0,		255},
+	{	153,		0,		153},	
+	{	213,		100,		213},	
+	{	213,		213,		213},
+	{	100,		224,		224},
+	{	0,		100,		0},	
+};
+#endif
+
+RGB_COLOR_INFO_T RGB_ColorTable[COLORTABLESIZE]={0
 };
 
-YUV_COLOR_INFO_T YUV_ColorTable[1200]={0
+YUV_COLOR_INFO_T YUV_ColorTable[COLORTABLESIZE]={0
 };
 
 const int Image[10][192] = { 
@@ -713,3 +731,39 @@ const int Image_dot[] = { /* 4 * 13 */
 0x7DFA80FD, 0x8F046C9F, 0x7A4E8D08, 0x7BFF82FA, 0x7EFD80FE, 0x881D70F2, 0x7AC98B07, 0x7CFF81FC, 0x80FD7DFB, 0x83FD7AFA,
 0x7CFB81FC, 0x7DFD81FD, 0x80FD7CFD, 0x81FE7EFD, 0x7DFC80FD, 0x7EFC80FD
 };
+
+/********************************************************************
+ * Function:        void Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[])
+ *
+ * Description:     Create Color table and data for transfer 
+ *
+ * Dependencies:    RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]
+ *
+ * Return Code:		/
+ *
+ *******************************************************************/
+void Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]) 
+{
+    int i,j,interpolateSize;
+	unsigned char RVal,GVal,BVal, Color_Y, Color_U, Color_V;
+    // Create Color Table 
+	//interpolateSize = (sizeof(RGB_ColorTable) / sizeof(RGB_COLOR_INFO_T)) / ((sizeof(RGB_ColorPalette)-1) / sizeof(RGB_COLOR_INFO_T));
+  
+	interpolateSize = COLORTABLESIZE/(COLORPALETTESIZE-1);
+	//1200/60
+	
+	for(i=0; i< (COLORPALETTESIZE-1); i++)
+    {
+        for(j=0;j<interpolateSize;j++)
+        {
+			RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /interpolateSize*j); 	
+			GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /interpolateSize*j); 	
+			BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /interpolateSize*j); 
+			Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
+			Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
+			Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
+			YUV_ColorTable[i*interpolateSize+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
+        }		
+    }	
+}
+

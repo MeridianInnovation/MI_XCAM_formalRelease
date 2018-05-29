@@ -427,11 +427,6 @@
               <FilePath>..\..\..\lib\w55fa93_UVC_YUV_Only.lib</FilePath>
             </File>
             <File>
-              <FileName>DrvI2C.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\I2CS\DrvI2C.c</FilePath>
-            </File>
-            <File>
               <FileName>w55fa93_gpio.lib</FileName>
               <FileType>4</FileType>
               <FilePath>..\..\..\..\gpio\lib\w55fa93_gpio.lib</FilePath>
@@ -440,6 +435,11 @@
               <FileName>W55FA93_VideoIn.lib</FileName>
               <FileType>4</FileType>
               <FilePath>..\..\..\..\VideoIn\Lib\W55FA93_VideoIn.lib</FilePath>
+            </File>
+            <File>
+              <FileName>DrvI2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\I2CS\DrvI2C.c</FilePath>
             </File>
             <File>
               <FileName>DrvI2C_Thermal.c</FileName>

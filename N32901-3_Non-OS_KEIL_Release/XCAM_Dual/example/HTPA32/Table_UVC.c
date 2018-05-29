@@ -1,5 +1,8 @@
 #include "ThermalSensor.h"
 
+/*
+*	List of color palettes, please define in MI_XCAM.h
+*/
 #ifdef COLORPALETTE0
 RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 	{	176, 	0,		240},	//	0.25
@@ -460,6 +463,22 @@ RGB_COLOR_INFO_T RGB_ColorPalette[61]={
 	{	232,	232,	232},		//	29.25
 	{	236,	236,	236},		//	29.75	
 	{	240,	240,	240},		//	29.75	
+};
+#endif
+
+#ifdef COLORPALETTE0_WIDERANGE
+RGB_COLOR_INFO_T RGB_ColorPalette[11]={
+	{	0,		0,		0},
+	{	45,		42,		123},	
+	{	55,		181,		74},
+	{	243,		236,		25},
+	{	247,		145,		47},	
+	{	233,		29,		38},	
+	{	153,		76,		0},
+	{	153,		0,		153},	
+	{	213,		0,		213},	
+	{	224,		224,		224},
+	{	255,		255,		255},	
 };
 #endif
 

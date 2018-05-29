@@ -7,6 +7,15 @@ extern RGB_COLOR_INFO_T RGB_ColorPalette[];
 // Temperature value display
 extern const int 		Image_dot[];
 extern const int 		Image[10][192];
+
+//#define COLOR_ADAPTIVE							// Work well for adaptive color palette
+#ifdef COLOR_ADAPTIVE								// If color_adaptive is defined, change color palette here
+	#define	COLORPALETTE_BW_ADAPTIVE	
+#else
+	#define COLORPALETTE0
+	//#define COLORPALETTE0_WIDERANGE					// Color palette please refers to Table_UVC.c
+#endif
+
 /*
 *	Application functions
 */

@@ -86,7 +86,7 @@ void SYS_Init(void)
     SYS->GPA_MFPL &= ~(SYS_GPA_MFPL_PA2MFP_Msk | SYS_GPA_MFPL_PA3MFP_Msk);
     SYS->GPA_MFPL |= (0x8 << SYS_GPA_MFPL_PA2MFP_Pos) | (0x8 << SYS_GPA_MFPL_PA3MFP_Pos);
 
-		SYS->USBPHY &= ~SYS_USBPHY_HSUSBROLE_Msk;    /* select HSUSBD */
+	SYS->USBPHY &= ~SYS_USBPHY_HSUSBROLE_Msk;    /* select HSUSBD */
     /* Enable USB PHY */
     SYS->USBPHY = (SYS->USBPHY & ~(SYS_USBPHY_HSUSBROLE_Msk | SYS_USBPHY_HSUSBACT_Msk)) | SYS_USBPHY_HSUSBEN_Msk;
     for (i=0; i<0x1000; i++);      // delay > 10 us
@@ -151,12 +151,12 @@ int main(void)
 	
 	M480_InitSensor();
 	M480_OpenSensor();
-    create_color_table();
+    Create_color_table(RGB_ColorPalette,YUV_ColorTable);
 		
-    HSUSBD_Open(&gsHSInfo, UVC_ClassRequest, UVC_SetInterface);
+    HSUSBD_Open(&gsHSInfo, UVC_ClassRequest, UVC_SetInterface); //High Speed USB Device Controller
 		
     /* Endpoint configuration */
-    UVC_InitForHighSpeed();
+    UVC_InitForHighSpeed(); //UVC related to USB
     NVIC_EnableIRQ(USBD20_IRQn);
     HSUSBD_Start();
     printf("M487 UVC code\n");		
@@ -165,7 +165,7 @@ int main(void)
     UVC_Transfer_Init();
 	
 	// Hide temperature display
-//	SetTempDisplay(0);
+	SetTempDisplay(1);
 		
 	while(true) {
 		ResetFramePOIs();

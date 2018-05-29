@@ -160,10 +160,6 @@ VOID TempCal(int extend)
 		    {
 			      int index_offset;
 			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
-			      if(TDATA[g_TDATA_index][count] < 0)
-			      	TDATA[g_TDATA_index][count] = 0;
-			      if(TDATA[g_TDATA_index][count] >= 1200)
-			      	TDATA[g_TDATA_index][count] = 1199;
 			      count++;
         }
     }

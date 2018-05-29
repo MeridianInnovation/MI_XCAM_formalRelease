@@ -1162,6 +1162,7 @@ void uvcdEvent(int index)  /* UVC event */
     uint32_t u32RemainSize, value;   
     uint32_t index_offset;
     int32_t val,count;
+	int32_t max,min;
 
     if (uvcStatus.appConnected == 1)
     { 	
@@ -1226,7 +1227,6 @@ void uvcdEvent(int index)  /* UVC event */
 					value = TDATA[index][count] = Target[j][i] - 2732; 
 					// index fine tuning
 #ifdef COLOR_ADAPTIVE
-					int32_t max,min;
 					max = GetFramePOIs().maxTemPixel.Tmp;
 					min = GetFramePOIs().minTemPixel.Tmp;
 					val = abs((signed int)value - min) * 1199 / abs(max - min);
@@ -1422,23 +1422,23 @@ void draw_rectangle(uint32_t u32Count)
     }		
 }
 
-void create_color_table(void) /* Create Color table and data for transfer */
-{
-    int i,j;	
-    uint8_t Color_Y,Color_U,Color_V;
-		uint8_t RVal, GVal, BVal;
-    for(i=0;i<60;i++)
-    {
-			for(j=0;j<20;j++)
-			{
-				RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /20*j); 	
-				GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /20*j); 	
-				BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /20*j); 
-				Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
-				Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
-				Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
-				YUV_ColorTable[i*20+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
-			}				
-    }	
-}
+//void create_color_table(void) /* Create Color table and data for transfer */
+//{
+//    int i,j;	
+//    uint8_t Color_Y,Color_U,Color_V;
+//		uint8_t RVal, GVal, BVal;
+//    for(i=0;i<60;i++)
+//    {
+//			for(j=0;j<20;j++)
+//			{
+//				RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /20*j); 	
+//				GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /20*j); 	
+//				BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /20*j); 
+//				Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
+//				Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
+//				Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
+//				YUV_ColorTable[i*20+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
+//			}				
+//    }	
+//}
 

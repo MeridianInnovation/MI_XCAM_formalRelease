@@ -1,11 +1,11 @@
-# MI_XCAM_180322_formalRelease
+# MI_XCAM_180514_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
 There are two series MCU: M480 & N329-
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V3.01 180322
+SDK Version: Release V3.04 180514
 
 # API
 
@@ -17,11 +17,15 @@ ThermalSensor.h
 
 		void			M480_StartSensor(void);
 
+=============================================================================================
+
 		void			N329_InitSensor(void);
 
 		void			N329_OpenSensor(void);
 
+		int			N329_Interface_init (unsigned short interface);
 
+		void			N329_UartDataValid_Handler (UINT8* buf, UINT32 u32Len);
 
 MI_XCAM.h
 
@@ -49,25 +53,27 @@ MI_XCAM.h
 
 
 
-		void 			GetImageData(void);
+		unsigned int 		CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 
-		unsigned short		GetTemp(unsigned int x, unsigned int y);
+		void 			Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]);
 
 		FRAMEPOIS 		GetFramePOIs (void);
-		
-		unsigned short		GetTempDisplay(void);
+
+		void 			GetImageData (void);
 
 		int			GetTargetPixelIndex(void);
 
-		unsigned int 		CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
+		unsigned short		GetTemp(unsigned int x, unsigned int y);
 
-		unsigned int		StartStreaming(int Mode, char Temps, char Stream);
+		unsigned short		GetTempDisplay(void);
 
-		void			SetTempDisplay(unsigned short flag);
+		void 			ResetFramePOIs(void);
 
 		void			SetTargetPixelIndex(int index);
 
-		void 			ResetFramePOIs(void);
+		void			SetTempDisplay(unsigned short flag);
+
+		unsigned int		StartStreaming(int Mode, char Temps, char Stream);
 
 		
 # Known Issues
@@ -82,7 +88,6 @@ Soultion: Probably it is because the path is too long, which may cause problem. 
 
 Solution: You may try to move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
 
-
 -	Temperature accuracy
 
-The temperature is not fine tuned at protyping stage.
+The temperature is not fine tuned at prototyping stage.

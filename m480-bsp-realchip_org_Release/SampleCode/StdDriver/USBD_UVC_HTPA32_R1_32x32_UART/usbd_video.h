@@ -297,7 +297,6 @@ extern __align(4) volatile UVC_STATUS_T uvcStatus;
 int uvcdSendImage(uint32_t u32Addr, uint32_t u32transferSize, int bStillImage, int final);
 int uvcdIsReady(void);
 void uvcdEvent(int index);
-void create_color_table(void);
 void draw_rectangle(uint32_t u32Count);
 
 #endif  /* __USBD_UAC_H_ */

@@ -1,5 +1,5 @@
 /*
- *	SDK Version: Release V2.03 180322
+ *	SDK Version: Release V3.04 180514
  *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
@@ -34,13 +34,6 @@ typedef unsigned char uchar;
 // Pre-set at ThermalSensorAPI.lib
 #define DEADPIXELCOMPENSATE
 #define	POI
-
-//#define COLOR_ADAPTIVE							// Work well for adaptive color palette
-#ifdef COLOR_ADAPTIVE								// If color_adaptive is defined, change color palette here
-	#define	COLORPALETTE_BW_ADAPTIVE			
-#else
-	#define COLORPALETTE0							// COLORPALETTE0-3, refer to Table_UVC.c
-#endif
 
 #define AdrPixCMin 			0x00
 #define AdrPixCMin 			0x00
@@ -89,7 +82,7 @@ typedef unsigned char uchar;
 
 
 //pixelcount etc. for 32x32d
-#define VERSION				0x12345678
+#define VERSION				0x180514
 #define TRANSFER_BUFFER  	32*32*4  
 #define Pixel 				1024				
 #define PixelEighth 		128
@@ -117,6 +110,11 @@ typedef unsigned char uchar;
 #define STACKSIZEVDD 		50			
 #define VddStackAmount 		30
 #define MAXNROFDEFECTS  	24
+
+// Color Table
+#define COLORTABLESIZE 				1200
+#define COLORPALETTESIZE 			61
+#define COLORPALETTEADAPTIVESIZE 	13
 
 enum peri_interface{HUART = 0, UART, SPI};
 
@@ -190,8 +188,6 @@ typedef struct FRAMEPOI {
 	TEMPIXEL				minTemPixel;
 } FRAMEPOIS;
 
-
-
 /*
 *	API
 */
@@ -202,19 +198,20 @@ void 			HighDensPageWrite(unsigned short address,unsigned char *data, unsigned s
 
 void 			ReadCalibDataN(void);
 void			InitSensorDev(unsigned short TN);
-void 			InitMBITTRIMN(unsigned char user);
 void 			InitBIASTRIMN(unsigned char user);
 void 			InitBPATRIMN(unsigned char user);
-void 			InitPUTRIMN(unsigned char user);
 void 			InitCLKTRIMN(unsigned char user);
+void 			InitMBITTRIMN(unsigned char user);
+void 			InitPUTRIMN(unsigned char user);
 
-void 			GetImageData(void);
-unsigned short 	GetTemp(unsigned int x, unsigned int y);
-FRAMEPOIS		GetFramePOIs(void);
-unsigned short	GetTempDisplay(void);
-int 			GetTargetPixelIndex(void);
 unsigned int 	CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
-unsigned int 	StartStreaming(int Mode, char Temps,char Stream);
-void		 	SetTempDisplay(unsigned short flag);
-void			SetTargetPixelIndex(int index);
+void 			Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]);
+FRAMEPOIS		GetFramePOIs(void);
+void 			GetImageData(void);
+int 			GetTargetPixelIndex(void);
+unsigned short 	GetTemp(unsigned int x, unsigned int y);
+unsigned short	GetTempDisplay(void);
 void			ResetFramePOIs(void);
+void			SetTargetPixelIndex(int index);
+void		 	SetTempDisplay(unsigned short flag);
+unsigned int 	StartStreaming(int Mode, char Temps,char Stream);

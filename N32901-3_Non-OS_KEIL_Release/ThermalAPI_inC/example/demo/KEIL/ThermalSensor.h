@@ -9,6 +9,31 @@ extern signed short 			Target[32][32];
 extern int 						Image[10][192], Image_dot[];
 extern INT32 					g_extend;
 extern __align(4) short 		TDATA[2][1024];
+extern	unsigned short			TAN;
+
+// Color mode defination
+//#define COLOR_ADAPTIVE							// Work well for adaptive color palette
+#ifdef COLOR_ADAPTIVE								// If color_adaptive is defined, change color palette here
+	#define	COLORPALETTE_BW_ADAPTIVE	
+#else
+	#define COLORPALETTE0
+	//#define COLORPALETTE0_WIDERANGE					// Color palette please refers to Table_UVC.c
+#endif
+
+/*
+*	UART handler command list
+*	e.g: VCMD=TMP
+*/
+#define VCMD	0x444D4356
+#define TMP		0x504D543D
+#define AMT		0x544D413D
+#define STA		0x4154533D
+#define	RES 	0x5345523D
+#define VER 	0x5245563D
+#define	DAT		0x5441443D
+#define SET		0x5445533D
+#define POM		0x4D4F503D
+#define UVC		0x4356553D
 
 /*
 *	Application functions

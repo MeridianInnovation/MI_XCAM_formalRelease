@@ -12,31 +12,15 @@ extern __align(4) INT32 u32FrameData[];
 extern INT32 g_i16DisTemp, g_i16Ready, g_TDATA_index;  
 
 extern YUV_COLOR_INFO_T YUV_ColorTable[];
-extern RGB_COLOR_INFO_T RGB_ColorPalette[];
-
+#ifdef COLORPALETTE0_WIDERANGE
+	extern RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTEADAPTIVESIZE];
+#else
+	extern RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE];
+#endif
 extern FRAMEPOIS framePOIs;
+extern unsigned short TAN;		// Ambient Temperature = TAN - 2732; 
 
 LCDFORMATEX lcdInfo;
-
-void create_color_table(void)
-{
-    int i,j;
-	unsigned char RVal,GVal,BVal, Color_Y, Color_U, Color_V;
-    // Create Color Table 
-    for(i=0;i<60;i++)
-    {
-        for(j=0;j<20;j++)
-        {
-			RVal = (unsigned char)((float)RGB_ColorPalette[i].R  + ((float)RGB_ColorPalette[i+1].R - (float)RGB_ColorPalette[i].R) /20*j); 	
-			GVal = (unsigned char)((float)RGB_ColorPalette[i].G  + ((float)RGB_ColorPalette[i+1].G - (float)RGB_ColorPalette[i].G) /20*j); 	
-			BVal = (unsigned char)((float)RGB_ColorPalette[i].B  + ((float)RGB_ColorPalette[i+1].B - (float)RGB_ColorPalette[i].B) /20*j); 
-			Color_Y = (unsigned char)(RVal * 0.299 	+ GVal * 0.587	+ BVal * 0.114);
-			Color_U = (unsigned char)(RVal * (-0.169) 	- GVal * 0.332 	+ BVal * 0.500 + 128);
-			Color_V = (unsigned char)(RVal * 0.5		- GVal * 0.419 	- BVal * 0.0813 + 128);
-			YUV_ColorTable[i*20+j].YUVData = (Color_V << 24) | ((Color_Y << 16)) | (Color_U << 8) | (Color_Y);
-        }		
-    }
-}
 
 int main (void)
 {    
@@ -52,7 +36,7 @@ int main (void)
              96000,		  			//UINT32 u32HclkKHz,
              48000);				//UINT32 u32ApbKHz		
 			 
-    create_color_table();
+    create_color_table(RGB_ColorPalette,YUV_ColorTable);
 	
 #ifdef __PANEL__	
     /* Init Panel */	
@@ -145,7 +129,6 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 				sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j]; //TDATA[0][ 0-31*31] from what I can see
 		}	
 	  sum = sum / W_HEIGHT / W_WIDTH;
-	  
 	}
 	else
 		sum = GetTemp(GetTargetPixelIndex()%WIDTH,GetTargetPixelIndex()/WIDTH);
@@ -365,21 +348,25 @@ VOID TempCal(int extend)
 		    {
 			      int index_offset;
 			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
-			      if(TDATA[g_TDATA_index][count] < 0)
-			      	TDATA[g_TDATA_index][count] = 0;
+				  
 #ifdef COLOR_ADAPTIVE
 				value = TDATA[g_TDATA_index][count];
-				index = abs((signed int)value - min) * 1199 / abs(max - min);
-				// Boundary check
-				if((value-min) > (max-min))
-					index = 1199;
+				index = abs((signed int)value - min) * (COLORTABLESIZE - 1) / abs(max - min);
+#else
+	#ifdef COLORPALETTE0_WIDERANGE
+				value  =  TDATA[g_TDATA_index][count];
+	#else
+				value  =  TDATA[g_TDATA_index][count] + 600; 
+	#endif
+				index = value;
+#endif			
+				// entry boundary check
+				if(index >= COLORTABLESIZE - 1)
+					index = COLORTABLESIZE - 1;
+				else if(index <= 0)
+					index = 0;
 					
 				value = YUV_ColorTable[index].YUVData;
-#else
-				value  =  TDATA[g_TDATA_index][count] + 600; 
-				value = YUV_ColorTable[value].YUVData;
-#endif			
-
 				count++;
 				
 				if(uvcStatus.FrameIndex == UVC_640)
@@ -400,14 +387,16 @@ VOID TempCal(int extend)
 					
 				}
 #ifdef __PANEL__					
-            /* LCD */		
-            index_offset = i*3*PANEL_WIDTH + offset_LCD + j*3;
-            for(k=0;k<6;k++)
-                for(l=0;l<3;l++)
-                    u32FrameData[index_offset + k*PANEL_WIDTH/2 + l] = value;
+				/* LCD */		
+				index_offset = i*3*PANEL_WIDTH + offset_LCD + j*3;
+				for(k=0;k<6;k++){
+					for(l=0;l<3;l++){
+						u32FrameData[index_offset + k*PANEL_WIDTH/2 + l] = value;
+					}
+				}
 #endif						
-        }
-    }
+			}
+		}
 	if(GetTempDisplay() == 1) {
 		TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
 		Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);
