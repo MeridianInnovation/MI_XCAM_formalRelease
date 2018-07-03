@@ -18,7 +18,7 @@ extern YUV_COLOR_INFO_T YUV_ColorTable[];
 	extern RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE];
 #endif
 extern FRAMEPOIS framePOIs;
-extern unsigned short TAN;		// Ambient Temperature = TAN - 2732; 
+extern signed short TAN;		// Ambient Temperature = TAN - 2732; 
 
 LCDFORMATEX lcdInfo;
 
@@ -58,7 +58,7 @@ int main (void)
 	N329_OpenSensor();
 	
 	// UART/HUART interface initialization
-	N329_Interface_init(UART);
+	N329_Interface_init(HUART);
 	
 	/* Open USB Device */
 	udcOpen();

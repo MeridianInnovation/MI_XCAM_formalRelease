@@ -11,12 +11,12 @@
 
 extern __align(4) UINT32 		u32PacketFrameBuffer[2][640*480/2];
 extern UINT32 					u32Lock,u32UvcBufferIndex;
-extern INT32 g_i16DisTemp, g_i16Ready, g_TDATA_index;  
+extern INT32 g_i16DisTemp, 		g_i16Ready, g_TDATA_index;  
 
-extern YUV_COLOR_INFO_T YUV_ColorTable[];
-extern RGB_COLOR_INFO_T RGB_ColorPalette[];
+extern YUV_COLOR_INFO_T 		YUV_ColorTable[];
+extern RGB_COLOR_INFO_T 		RGB_ColorPalette[];
 
-extern FRAMEPOIS framePOIs;
+extern FRAMEPOIS 				framePOIs;
 
 void 							uvcdEvent(UINT8 u8index);
 int 							VIN_main(void);
@@ -42,33 +42,33 @@ void create_color_table(void)
 }
 void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD)
 {
-    int i,j;
-	int sum = 0;
-	UINT32 u32start,u32Index0,u32Index1,u32Index2;
-	UINT32 start_UVC,  offset_UVC;
-    UINT32 *u32Data;	
+    int 		i,j;
+	int 		sum = 0;
+	UINT32 		u32start, u32Index0, u32Index1, u32Index2;
+	UINT32 		start_UVC, offset_UVC;
+    UINT32 		*u32Data;	
 	
-    /* Temperature Average */	
-	  u32start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
-	  for(i=0;i<W_HEIGHT;i++)
-	  {
-		    for(j=0;j<W_WIDTH;j++)					    
-			    sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j];
-		}	
-	  sum = sum / W_HEIGHT / W_WIDTH;
+	/* Temperature Average */	
+	u32start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
+	for(i=0;i<W_HEIGHT;i++)
+	{
+		for(j=0;j<W_WIDTH;j++)					    
+			sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j];
+	}	
+	sum = sum / W_HEIGHT / W_WIDTH;
 	  
 		
-	  g_i16DisTemp = sum;
-	  g_i16Ready = 1;
-	  u32Index0 = sum /100;
+	g_i16DisTemp = sum;
+	g_i16Ready = 1;
+	u32Index0 = sum /100;
 
-	  u32Index1 = (sum /10) % 10;
+	u32Index1 = (sum /10) % 10;
 
-	  u32Index2 = sum % 10;
+	u32Index2 = sum % 10;
 		
     /* Temperature display */	
     start_UVC = (u32UVCWidth - 56) / 2 + 64 * u32UVCWidth / 2;	
-		u32Data = (UINT32 *)((UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
+	u32Data = (UINT32 *)((UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
 	  for(i = 0;i< 24;i++)
 	  {
 	  	  offset_UVC = start_UVC + i * u32UVCWidth/2;							
@@ -124,7 +124,7 @@ VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offs
 
 VOID TempCal(int extend)
 {
-	int i,j,k,l,offset_UVC;
+	int i,j,offset_UVC;
 	UINT8 *u8Data;	
     UINT32 *u32Data;	
 	UINT32 value,count = 0,index;
@@ -158,7 +158,6 @@ VOID TempCal(int extend)
 	  { 
 		    for(j=0;j<WIDTH;j++)
 		    {
-			      int index_offset;
 			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
 			      count++;
         }
@@ -168,6 +167,7 @@ VOID TempCal(int extend)
     u8Data = (UINT8 *)( (UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
 		for(i=0;i<1024;i++)
 		{
+			// +/-
 			if(TDATA[g_TDATA_index][i] >= 0)			 
 				u8Data[index] = u8Data[index] & ~0x1;
 			else            	
@@ -176,14 +176,15 @@ VOID TempCal(int extend)
 			value = abs(TDATA[g_TDATA_index][i]);				
 									
 			index += 2;
-			for(j=9;j>=0;j--)
+			// index start from 3
+			for(j=PIXELPADDEDBITS;j>=0;j--)
 			{					
 				if(value & (1 << j))					
 					u8Data[index] = u8Data[index] | 0x1;
-							else
+				else
 					u8Data[index] = u8Data[index] & ~0x1;
 							
-						index += 2;
+				index += 2;
 			}
 		}	
 #endif		
@@ -196,7 +197,6 @@ VOID TempCal(int extend)
 
 int main (void)
 {
-    WB_UART_T 	uart;
     UINT32 		u32ExtFreq, count = 5;	    
     INT index;   
     sysEnableCache(CACHE_WRITE_BACK);	
@@ -225,44 +225,40 @@ int main (void)
 	N329_InitSensor();
 	N329_OpenSensor();
 			
-	  N329_Interface_init(UART);
+	N329_Interface_init(UART);
 		
-	  /* Open USB Device */
-	  udcOpen();
+	/* Open USB Device */
+	udcOpen();
 	  
-		/* Init USB Device Setting as Video Class Device */
-	  uvcdInit(NULL);		
+	/* Init USB Device Setting as Video Class Device */
+	uvcdInit(NULL);		
 	  
 	// Enable/Disable temperature display
 	SetTempDisplay(0);							// UI can be done on firmware/software side
 	
-    while(count)
-		{
-        /* Get Image Data */			
-	  	  index = StartStreaming(0, 1, 1);
+    while(count) {
+		/* Get Image Data */			
+		index = StartStreaming(0, 1, 1);
 			
-	  	  if(index != 0xFF)			
-	  	      count--;				
-		}	
+		if(index != 0xFF)			
+		count--;				
+	}	
 	
-	  /* Init USB Device */	
-	  udcInit();
+	/* Init USB Device */	
+	udcInit();
 		
-	  while(1)
-	  {	
-        /* Get Image Data */			
-	  	  index = StartStreaming(0, 1, 1);
+	while(1) {	
+		/* Get Image Data */			
+		index = StartStreaming(0, 1, 1);
 			
-	  	  if(index != 0xFF)
-	  	  {				
-            u32Lock = 1; 					 
+		if(index != 0xFF) {				
+			u32Lock = 1; 					 
 			TempCal(g_extend);	
 		
-			if (usbdStatus.appConnected == 1)
-			{								
+			if (usbdStatus.appConnected == 1) {								
 				uvcdEvent(g_TDATA_index);	
 			}
 			u32Lock = 0;
-	  	  }
-	  }	
+		}
+	}	
 }

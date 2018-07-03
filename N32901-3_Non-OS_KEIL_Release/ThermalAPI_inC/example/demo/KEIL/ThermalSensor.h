@@ -8,8 +8,8 @@ extern SENSORSETTING			SensorInfo;
 extern signed short 			Target[32][32];
 extern int 						Image[10][192], Image_dot[];
 extern INT32 					g_extend;
-extern __align(4) short 		TDATA[2][1024];
-extern	unsigned short			TAN;
+extern __align(4) signed short 	TDATA[2][1024];
+extern	signed short			TAN;
 
 // Color mode defination
 //#define COLOR_ADAPTIVE							// Work well for adaptive color palette

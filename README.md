@@ -1,11 +1,11 @@
-# MI_XCAM_180514_formalRelease
+# MI_XCAM_180629_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
 There are two series MCU: M480 & N329-
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V3.04 180514
+SDK Version: Release V3.04 180629
 
 # API
 
@@ -88,6 +88,19 @@ Soultion: Probably it is because the path is too long, which may cause problem. 
 
 Solution: You may try to move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
 
+-	How can I remove temperature display?
+	
+Solution: You can control the blackets and Temperature display On/Off inside if(GetTempDisplay() == 1) {...}
+
+-	How to read temperature output from UART?
+	
+Solution: First send UART command VCMD=DAT/AMT/TMP. The output is shown in Hex format. E.g: C9(HEX) = 201(DEC) = 20.1 degree / FFFFC9(HEX) = (FFFFFF - FFFFC9)54(DEC) = -5.4 degree
+
+-	Temperature value format
+
+Solution: Row * Col * 2 bytes
+
 -	Temperature accuracy
 
-The temperature is not fine tuned at prototyping stage.
+The temperature is not fine tuned at prototyping stage. The accuracy is +-1 degree roughly.
+

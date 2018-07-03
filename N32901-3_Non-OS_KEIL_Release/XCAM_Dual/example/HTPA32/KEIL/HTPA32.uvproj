@@ -361,7 +361,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define></Define>
+              <Define>MCU=329</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\..\lib;..\..\..\..\SYSLIB\Lib;..\..\..\..\I2C\lib;..\..\..\..\UDC\lib;..\..\..\..\VPOST\Lib;..\..\..\..\GPIO\lib;..\I2CS;..\..\..\..\VideoIn\Lib;..\VIN;..\..\..\..\ThermalAPI_inC\example\demo\KEIL;..\..\..\..\..\MI_Sensor</IncludePath>
             </VariousControls>

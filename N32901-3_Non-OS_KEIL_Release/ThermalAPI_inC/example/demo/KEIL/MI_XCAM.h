@@ -1,5 +1,5 @@
 /*
- *	SDK Version: Release V3.04 180514
+ *	SDK Version: Release V3.04 180629
  *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
@@ -15,9 +15,10 @@
 #include "wbio.h"
 #include "wblib.h"
 
-#define TEMP_OFFSET 		2.0 				//Temperature offset
+#define TEMP_OFFSET 		2.0 				// Temperature offset
 #define PANEL_WIDTH			320					/* PANEL Width (Raw data output width for Panel Test) */
 #define PANEL_HEIGHT		240     			/* PANEL Height (Raw data output height for Panel Test) */
+#define PIXELPADDEDBITS		13
 
 typedef unsigned char uchar;
 
@@ -82,7 +83,7 @@ typedef unsigned char uchar;
 
 
 //pixelcount etc. for 32x32d
-#define VERSION				0x180514
+#define VERSION				0x180629
 #define TRANSFER_BUFFER  	32*32*4  
 #define Pixel 				1024				
 #define PixelEighth 		128
