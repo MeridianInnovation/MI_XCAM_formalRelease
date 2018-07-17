@@ -1,11 +1,11 @@
-# MI_XCAM_180629_formalRelease
+# MI_XCAM_180717_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
 There are two series MCU: M480 & N329-
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V3.04 180629
+SDK Version: Release V3.05 180717
 
 # API
 
@@ -103,4 +103,8 @@ Solution: Row * Col * 2 bytes
 -	Temperature accuracy
 
 The temperature is not fine tuned at prototyping stage. The accuracy is +-1 degree roughly.
+
+-	How to change color palette?
+
+The color palette is controlled by macros under COLOR_ADAPTIVE.  You can activate adaptive mode with "#define COLOR_ADAPTIVE" in MI_XCAM.h. You can define which color palette is using in ThermalSensor.h.
 

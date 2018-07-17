@@ -1,5 +1,5 @@
 /*
- *	SDK Version: Release V3.04 180629
+ *	SDK Version: Release V3.05 180717
  *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
@@ -35,6 +35,12 @@ typedef unsigned char uchar;
 // Pre-set at ThermalSensorAPI.lib
 #define DEADPIXELCOMPENSATE
 #define	POI
+
+// Color palette
+//#define COLOR_ADAPTIVE								// Work well for adaptive color palette
+
+// UVC Temperature Display
+//#define MIN_MAX_TEMP_DISPLAY
 
 #define AdrPixCMin 			0x00
 #define AdrPixCMin 			0x00
@@ -83,7 +89,7 @@ typedef unsigned char uchar;
 
 
 //pixelcount etc. for 32x32d
-#define VERSION				0x180629
+#define VERSION				0x180717
 #define TRANSFER_BUFFER  	32*32*4  
 #define Pixel 				1024				
 #define PixelEighth 		128
@@ -91,8 +97,8 @@ typedef unsigned char uchar;
 #define COLUMN 				32
 #define WIDTH	 	  		32
 #define HEIGHT 				32
-#define W_WIDTH 			2
-#define W_HEIGHT 			2
+#define W_WIDTH 			1
+#define W_HEIGHT 			1
 #define PTATamount 			8
 #define ELOFFSET 			1024				
 #define ELAMOUNT 			256
@@ -113,10 +119,15 @@ typedef unsigned char uchar;
 #define MAXNROFDEFECTS  	24
 
 // Color Table
-#define COLORTABLESIZE 				1200
-#define COLORPALETTESIZE 			61
-#define COLORPALETTEADAPTIVESIZE 	13
-
+#define COLORTABLESIZE 					1200
+#ifdef COLOR_ADAPTIVE
+	#define COLORPALETTESIZE 			11
+	#define COLORPALETTEADAPTIVESIZE 	11
+#else
+	#define COLORPALETTESIZE 			61
+	#define COLORPALETTEADAPTIVESIZE 	13 
+#endif	
+	
 enum peri_interface{HUART = 0, UART, SPI};
 
 typedef struct YUV_COLOR_INFO_T{

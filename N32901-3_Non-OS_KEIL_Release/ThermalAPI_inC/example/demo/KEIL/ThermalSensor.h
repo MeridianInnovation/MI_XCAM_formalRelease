@@ -12,12 +12,10 @@ extern __align(4) signed short 	TDATA[2][1024];
 extern	signed short			TAN;
 
 // Color mode defination
-//#define COLOR_ADAPTIVE							// Work well for adaptive color palette
-#ifdef COLOR_ADAPTIVE								// If color_adaptive is defined, change color palette here
-	#define	COLORPALETTE_BW_ADAPTIVE	
+#ifdef COLOR_ADAPTIVE						// Color palette please refers to Table_UVC.c	
+	#define COLORPALETTE0_WIDERANGE			// 9 table can be chosen, default Heated iron scale
 #else
-	#define COLORPALETTE0
-	//#define COLORPALETTE0_WIDERANGE					// Color palette please refers to Table_UVC.c
+	#define COLORPALETTE0			
 #endif
 
 /*

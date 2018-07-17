@@ -59,7 +59,7 @@ INT32 i2cOpen_Thermal(VOID)
 	_i2cReset_Thermal(dev);
 	
 	dev->openflag = 1;
-	
+	//sysprintf("i2cOpen_Thermal():dev->state = %d\n\r",dev->state);
 	return 0;
 }
 
@@ -87,7 +87,7 @@ INT32 i2cIoctl_Thermal(UINT32 cmd, UINT32 arg0, UINT32 arg1)
 	switch(cmd){
 		case I2C_IOC_SET_DEV_ADDRESS:
 			dev->addr = arg0;
-		//	sysprintf("Address : %02x\n", arg0&0xff);
+//			sysprintf("DrvI2c->Address : %02x\n", arg0&0xff);
 			break;
 
 		case I2C_IOC_SET_SUB_ADDRESS:
@@ -98,7 +98,7 @@ INT32 i2cIoctl_Thermal(UINT32 cmd, UINT32 arg0, UINT32 arg1)
 
 			dev->subaddr = arg0;
 			dev->subaddr_len = arg1;
-			//sysprintf("Sub Address = %02x, length = %d\n",arg0, arg1);
+//			sysprintf("DrvI2c->Sub Address = %02x, length = %d\n",arg0, arg1);
 						
 			break;
 
@@ -264,6 +264,7 @@ DrvI2C_WriteByte_Thermal(
 		 DrvI2C_SendStop_Thermal();
 //		DrvI2C_Delay(8);
 		
+	//sysprintf("bCheckAck = %d\t\t_DRVI2C_SDA_GETVALUE = %d\n\r",bCheckAck,i32HoldPinValue);
 	if (!bCheckAck)
 		return Successful;
 	else	
@@ -291,7 +292,6 @@ DrvI2C_ReadByte_Thermal(
 	// Read data from slave device and the most signification bit(MSB) first
 	for ( u8DataCount=0; u8DataCount<8; u8DataCount++ )
 	{	
-		
 		u32Data = u32Data<<1;
 //		DrvI2C_Delay(3);
 		_DRVI2C_SCK_SETHIGH(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);		
@@ -300,6 +300,8 @@ DrvI2C_ReadByte_Thermal(
 //		DrvI2C_Delay(2);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
 //		DrvI2C_Delay(2);
+
+		//sysprintf("bSendAck = %d\t\tu32Data[%d] = %d\n\r",bSendAck,u8DataCount,u32Data);
 	}
 	*pu8ReadData = u32Data;
 	if(bSendAck)
@@ -347,10 +349,11 @@ INT32 i2cWrite_Thermal(PUINT8 buf, UINT32 len)
 	_i2cCalcAddr_Thermal(dev, I2C_STATE_WRITE);	
 
 	/* Send START & Chip Address & check ACK */
+	//sysprintf("i2cWrite_Thermal()->len = %d\n\r",len);
 	dev->last_error = DrvI2C_WriteByte_Thermal(TRUE, dev->buffer[0], TRUE, FALSE);
 	if(dev->last_error) 
 	{
-		sysprintf("Write uAddr fail\n");
+		//sysprintf("Write uAddr fail\n");
 		goto exit_write; 
 	}
 	
@@ -360,7 +363,7 @@ INT32 i2cWrite_Thermal(PUINT8 buf, UINT32 len)
 		dev->last_error = DrvI2C_WriteByte_Thermal(FALSE, dev->buffer[i], TRUE, FALSE);
 		if(dev->last_error) 
 		{
-			sysprintf("Write uRegAddr fail\n");
+			//sysprintf("Write uRegAddr fail\n");
 			goto exit_write;  
 		}
 	}
@@ -374,7 +377,7 @@ INT32 i2cWrite_Thermal(PUINT8 buf, UINT32 len)
 			dev->last_error = DrvI2C_WriteByte_Thermal(FALSE, buf[i], TRUE, FALSE);
 		if(dev->last_error) 
 		{
-			sysprintf("Write uData fail\n");
+			//sysprintf("Write uData fail\n");
 			goto exit_write;   
 		}
 	}	
@@ -415,11 +418,12 @@ INT32 i2cRead_Thermal(PUINT8 buf, UINT32 len)
 
 	_i2cCalcAddr_Thermal(dev, I2C_STATE_READ);	
 
+	//sysprintf("i2cRead_Thermal()->len = %d\n\r",len);
 	/* Send START & Chip Address & check ACK */
 	dev->last_error = DrvI2C_WriteByte_Thermal(TRUE, dev->buffer[0], TRUE, FALSE);	
 	if(dev->last_error) 
 	{
-		sysprintf("Write uAddr fail\n");	
+		//sysprintf("Write uAddr fail\n");	
 		goto exit_read;
 	}
 
@@ -429,7 +433,7 @@ INT32 i2cRead_Thermal(PUINT8 buf, UINT32 len)
 		dev->last_error = DrvI2C_WriteByte_Thermal(FALSE, dev->buffer[i], TRUE, FALSE);
 		if(dev->last_error) 
 		{
-			sysprintf("Write uRegAddr fail\n");
+			//sysprintf("Write uRegAddr fail\n");
 			goto exit_read;  
 		}
 	}
@@ -438,7 +442,7 @@ INT32 i2cRead_Thermal(PUINT8 buf, UINT32 len)
 	dev->last_error = DrvI2C_WriteByte_Thermal(TRUE, dev->buffer[dev->subaddr_len + 1], TRUE, FALSE);	
 	if(dev->last_error) 
 	{
-		sysprintf("Write uAddr fail\n");
+		//sysprintf("Write uAddr fail\n");
 		goto exit_read;
 	}
 
@@ -451,7 +455,7 @@ INT32 i2cRead_Thermal(PUINT8 buf, UINT32 len)
 			dev->last_error = DrvI2C_ReadByte_Thermal(FALSE, &buf[i], TRUE, FALSE);
 		if(dev->last_error) 
 		{
-			sysprintf("Read fail\n");
+			//sysprintf("Read fail\n");
 			goto exit_read;
 		}
 	}	

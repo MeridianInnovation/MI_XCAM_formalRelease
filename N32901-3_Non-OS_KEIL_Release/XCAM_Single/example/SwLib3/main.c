@@ -28,7 +28,6 @@ int main (void)
 	UINT8 		u8SendThermaldata = 0;
 
     sysEnableCache(CACHE_WRITE_BACK);	
-
     sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
             192000,	   				//UINT32 u32PllKHz, 	
              96000,		  			//UINT32 u32SysKHz,
@@ -36,7 +35,7 @@ int main (void)
              96000,		  			//UINT32 u32HclkKHz,
              48000);				//UINT32 u32ApbKHz		
 			 
-    create_color_table(RGB_ColorPalette,YUV_ColorTable);
+    Create_color_table(RGB_ColorPalette,YUV_ColorTable);
 	
 #ifdef __PANEL__	
     /* Init Panel */	
@@ -52,13 +51,13 @@ int main (void)
     /* Init Frame Buffer */
     for(i=0;i<38400;i++)
         u32FrameData[i] = 0x80008000;//0x80FF80FF;
-#endif				
+#endif			
+
+	// UART/HUART interface initialization
+	N329_Interface_init(HUART);	
 
 	N329_InitSensor();
 	N329_OpenSensor();
-	
-	// UART/HUART interface initialization
-	N329_Interface_init(HUART);
 	
 	/* Open USB Device */
 	udcOpen();
@@ -135,14 +134,21 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 		
 	// Single pixel
 	//sum = GetTemp(31,0);
-		
+	//sum = EEPROMInfo.TableNumberSensor;
+	
+	
+// Left Temp display (Avg/Max)
+#ifdef MIN_MAX_TEMP_DISPLAY
+	sum = framePOIs.maxTemPixel.Tmp;
+#endif
+	
 	g_i16DisTemp = sum;
 	g_i16Ready = 1;
 	u32Index0 = (sum /1000);
 	u32Index1 = (sum /100) % 10;
 	u32Index2 = (sum /10) % 10;
 	u32Index3 = sum % 10;
-		
+
 	/* Temperature display */	
 	if(uvcStatus.FrameIndex == UVC_640) //display location for phone app
 		start_UVC = ((yDisp + 1) * 7 * 640) + ((xDisp + 7) * 7);
@@ -153,6 +159,45 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 
 	start_LCD = (2*WIDTH*3 - 56) / 2;	
 		
+	for(i = 0;i< 24;i++)
+	{
+		if(uvcStatus.FrameIndex == UVC_640)
+		  offset_UVC = start_UVC + i * 640/2;			
+		else
+			  offset_UVC = start_UVC + i * u32UVCWidth/2 + 20 * 3;	
+
+		offset_LCD_tmp = start_LCD + 28 + i * PANEL_WIDTH/2 + offset_LCD;												
+				
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 0],(void *) &Image[u32Index0][i*8],32);
+#ifdef __PANEL__				
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 0],(void *) &Image[u32Index0][i*8],32);
+#endif		
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 8],(void *) &Image[u32Index1][i*8],32);
+#ifdef __PANEL__				
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 8],(void *) &Image[u32Index1][i*8],32);
+#endif		
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 16],(void *) &Image[u32Index2][i*8],32);
+#ifdef __PANEL__				
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 16],(void *) &Image[u32Index2][i*8],32);	
+#endif			
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 24],(void *) &Image_dot[i*4],16);
+#ifdef __PANEL__				
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 24],(void *) &Image_dot[i*4],16);		
+#endif		
+		memcpy((void *)&u32Data[g_TDATA_index][offset_UVC + 28],(void *) &Image[u32Index3][i*8],32);
+#ifdef __PANEL__				
+		memcpy((void *)&u32FrameData[offset_LCD_tmp + 28],(void *) &Image[u32Index3][i*8],32);	
+#endif			
+	}	
+	
+	
+// Right temperature display (Min)
+#ifdef MIN_MAX_TEMP_DISPLAY
+	sum = framePOIs.minTemPixel.Tmp;
+	u32Index0 = (sum /1000);
+	u32Index1 = (sum /100) % 10;
+	u32Index2 = (sum /10) % 10;
+	u32Index3 = sum % 10;
 	for(i = 0;i< 24;i++)
 	{
 		if(uvcStatus.FrameIndex == UVC_640)
@@ -183,6 +228,8 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 		memcpy((void *)&u32FrameData[offset_LCD_tmp + 28],(void *) &Image[u32Index3][i*8],32);	
 #endif			
 	}	
+#endif
+
 }
 
 /**
@@ -198,7 +245,7 @@ VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offs
     if(uvcStatus.FrameIndex == UVC_640) //phone
     {
         //start_UVC = (((WIDTH - W_HEIGHT) * 7) * (640) + (WIDTH - W_WIDTH) * 7)/2 + offset_UVC;
-				start_UVC = (y * 7 * 640) + (x * 7) + offset_UVC;
+		start_UVC = (y * 7 * 640) + (x * 7) + offset_UVC;
         for(j=0;j<1 * 7;j++)
         {
             u32Data[g_TDATA_index][start_UVC + j] = 0x80008000;
