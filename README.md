@@ -86,19 +86,19 @@ Soultion: Probably it is because the path is too long, which may cause problem. 
 
 -	(N329) Can I output Uart/Huart data without opening XCAM?
 
-Solution: You may try to move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
+Solution: Move "TempCal()" to outside the usb connected checking statement "if (usbdStatus.appConnected == 1)".
 
 -	How can I remove temperature display?
 	
-Solution: You can control the blackets and Temperature display On/Off inside if(GetTempDisplay() == 1) {...}
+Solution: Control the blackets and Temperature display On/Off inside if(GetTempDisplay() == 1) {...}
 
 -	How to read temperature output from UART?
 	
-Solution: First send UART command VCMD=DAT/AMT/TMP. The output is shown in Hex format. E.g: C9(HEX) = 201(DEC) = 20.1 degree / FFFFC9(HEX) = (FFFFFF - FFFFC9)54(DEC) = -5.4 degree
+First send UART command VCMD=DAT/AMT/TMP. The output is shown in Hex format. E.g: C9(HEX) = 201(DEC) = 20.1 degree / FFFFC9(HEX) = (FFFFFF - FFFFC9)54(DEC) = -5.4 degree
 
 -	Temperature value format
 
-Solution: Row * Col * 2 bytes
+Row * Col * 2 bytes
 
 -	Temperature accuracy
 
