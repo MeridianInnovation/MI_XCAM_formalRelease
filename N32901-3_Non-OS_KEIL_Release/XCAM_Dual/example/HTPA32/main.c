@@ -11,7 +11,7 @@
 
 extern __align(4) UINT32 		u32PacketFrameBuffer[2][640*480/2];
 extern UINT32 					u32Lock,u32UvcBufferIndex;
-extern INT32 g_i16DisTemp, 		g_i16Ready, g_TDATA_index;  
+extern INT32 					g_i16DisTemp, g_i16Ready, g_TDATA_index;  
 
 extern YUV_COLOR_INFO_T 		YUV_ColorTable[];
 extern RGB_COLOR_INFO_T 		RGB_ColorPalette[];
@@ -60,23 +60,25 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD)
 		
 	g_i16DisTemp = sum;
 	g_i16Ready = 1;
-	u32Index0 = sum /100;
+	if(GetTempDisplay() == 1) { 
+		u32Index0 = sum /100;
 
-	u32Index1 = (sum /10) % 10;
+		u32Index1 = (sum /10) % 10;
 
-	u32Index2 = sum % 10;
-		
-    /* Temperature display */	
-    start_UVC = (u32UVCWidth - 56) / 2 + 64 * u32UVCWidth / 2;	
-	u32Data = (UINT32 *)((UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
-	  for(i = 0;i< 24;i++)
-	  {
-	  	  offset_UVC = start_UVC + i * u32UVCWidth/2;							
-	  	  memcpy((void *)&u32Data[offset_UVC + 0],(void *) &Image[u32Index0][i*8],32);			
-	  	  memcpy((void *)&u32Data[offset_UVC + 8],(void *) &Image[u32Index1][i*8],32);				
-	  	  memcpy((void *)&u32Data[offset_UVC + 16],(void *) &Image_dot[i*4],16);				
-	  	  memcpy((void *)&u32Data[offset_UVC + 20],(void *) &Image[u32Index2][i*8],32);				
-    }	
+		u32Index2 = sum % 10;
+			
+		/* Temperature display */	
+		start_UVC = (u32UVCWidth - 56) / 2 + 64 * u32UVCWidth / 2;	
+		u32Data = (UINT32 *)((UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
+		for(i = 0;i< 24;i++)
+		{
+			  offset_UVC = start_UVC + i * u32UVCWidth/2;							
+			  memcpy((void *)&u32Data[offset_UVC + 0],(void *) &Image[u32Index0][i*8],32);			
+			  memcpy((void *)&u32Data[offset_UVC + 8],(void *) &Image[u32Index1][i*8],32);				
+			  memcpy((void *)&u32Data[offset_UVC + 16],(void *) &Image_dot[i*4],16);				
+			  memcpy((void *)&u32Data[offset_UVC + 20],(void *) &Image[u32Index2][i*8],32);				
+		}	
+	}
 }
 
 VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offset_LCD)
@@ -155,13 +157,13 @@ VOID TempCal(int extend)
 	
     u32Data = (UINT32 *)( (UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
 	  for(i=0;i<HEIGHT;i++)
-	  { 
-		    for(j=0;j<WIDTH;j++)
-		    {
-			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
-			      count++;
-        }
-    }
+		{ 
+			for(j=0;j<WIDTH;j++)
+			{
+				  TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
+				  count++;
+			}
+		}
 		index = 1;
 #if 1	
     u8Data = (UINT8 *)( (UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
@@ -189,8 +191,8 @@ VOID TempCal(int extend)
 		}	
 #endif		
     offset_UVC = ((u32Height - 448) * u32Width /4) + ((u32Width - 448) /4);
+	TempDisplay(u32UVCWidth, 0);
 	if(GetTempDisplay() == 1) {
-		TempDisplay(u32UVCWidth, 0);
 		Draw_Area(extend, u32UVCWidth, offset_UVC, 0);		
 	}
 }
@@ -199,14 +201,7 @@ int main (void)
 {
     UINT32 		u32ExtFreq, count = 5;	    
     INT index;   
-    sysEnableCache(CACHE_WRITE_BACK);	
-
-    sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
-            192000,	   	//UINT32 u32PllKHz, 	
-             96000,		  //UINT32 u32SysKHz,
-             96000,		  //UINT32 u32CpuKHz,
-             96000,		  //UINT32 u32HclkKHz,
-             48000);		//UINT32 u32ApbKHz		
+    sysEnableCache(CACHE_WRITE_BACK);		
 	
     u32ExtFreq = sysGetExternalClock();    	/* KHz unit */	
     create_color_table();
@@ -214,18 +209,11 @@ int main (void)
 	outp32(REG_AHBCLK, inp32(REG_AHBCLK) & ~VPOST_CKE);
 				
     VIN_main();	
-
-    sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
-            192000,	   	//UINT32 u32PllKHz, 	
-             96000,		  //UINT32 u32SysKHz,
-             96000,		  //UINT32 u32CpuKHz,
-             96000,		  //UINT32 u32HclkKHz,
-             48000);		//UINT32 u32ApbKHz		
 						 
 	N329_InitSensor();
 	N329_OpenSensor();
 			
-	N329_Interface_init(UART);
+	N329_Interface_init(HUART);
 		
 	/* Open USB Device */
 	udcOpen();

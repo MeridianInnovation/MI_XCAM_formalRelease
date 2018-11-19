@@ -55,11 +55,11 @@ INT32 i2cOpen_Thermal(VOID)
 		return(I2C_ERR_BUSY);
 							
 	memset(dev, 0, sizeof(i2c_dev));
+//	sysprintf("sizeof(i2c_dev) = %d\n",sizeof(i2c_dev));
 	
 	_i2cReset_Thermal(dev);
 	
 	dev->openflag = 1;
-	//sysprintf("i2cOpen_Thermal():dev->state = %d\n\r",dev->state);
 	return 0;
 }
 
@@ -78,16 +78,16 @@ INT32 i2cClose_Thermal(VOID)
 INT32 i2cIoctl_Thermal(UINT32 cmd, UINT32 arg0, UINT32 arg1)
 {
 	i2c_dev *dev;
-	
 	dev = (i2c_dev *)((UINT32)&i2c_device);
-	
+	//sysprintf("i2cIoctl_Thermal: dev->flag = %d\n",dev->openflag);
 	if(dev->openflag == 0)
 		return(I2C_ERR_IO);	
-
+	//sysprintf("i2cIoctl_Thermal: cmd=%d,arg0=%d,arg1=%d\n",cmd,arg0,arg1);
+	
 	switch(cmd){
 		case I2C_IOC_SET_DEV_ADDRESS:
 			dev->addr = arg0;
-//			sysprintf("DrvI2c->Address : %02x\n", arg0&0xff);
+			//sysprintf("DrvI2c->Address : %02x\n", arg0&0xff);
 			break;
 
 		case I2C_IOC_SET_SUB_ADDRESS:
@@ -105,7 +105,6 @@ INT32 i2cIoctl_Thermal(UINT32 cmd, UINT32 arg0, UINT32 arg1)
 		default:
 			return(I2C_ERR_NOTTY);
 	}
-
 	return (0);	
 }
 
@@ -145,6 +144,10 @@ DrvI2C_Open_Thermal(
 	s_sChannel.u32SCKPinMask     = u32SCKPinMask;
 	s_sChannel.u32SDAPortIndex    = u32SDAPortIndex;
 	s_sChannel.u32SDAPinMask     = u32SDAPinMask;
+//	sysprintf("DrvI2C_Open_Thermal->u32SCKPortIndex = %d\n\r", u32SCKPortIndex);
+//	sysprintf("DrvI2C_Open_Thermal->u32SCKPinMask = %d\n\r", u32SCKPinMask);
+//	sysprintf("DrvI2C_Open_Thermal->u32SDAPortIndex = %d\n\r", u32SDAPortIndex);
+//	sysprintf("DrvI2C_Open_Thermal->u32SDAPinMask = %d\n\r", u32SDAPinMask);
 	
 	// 1.Check I/O pins. If I/O pins are used by other IPs, return error code.
 	// 2.Enable IP¡¦s clock
@@ -243,6 +246,7 @@ DrvI2C_WriteByte_Thermal(
 //		DrvI2C_Delay(2);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
 //		DrvI2C_Delay(2);
+		//sysprintf("bCheckAck = %d\t\tu32Data[%d] = %d\n\r",bCheckAck,u8DataCount,u8Data);
 	}
 	
 	// No Ack 
@@ -258,7 +262,8 @@ DrvI2C_WriteByte_Thermal(
 		i32HoldPinValue = _DRVI2C_SDA_GETVALUE(s_sChannel.u32SDAPortIndex, s_sChannel.u32SDAPinMask);
 		_DRVI2C_SCK_SETLOW(s_sChannel.u32SCKPortIndex, s_sChannel.u32SCKPinMask);
 //		DrvI2C_Delay(2);
-		
+		//sysprintf("s_sChannel.u32SDAPortIndex = %d\n",s_sChannel.u32SDAPortIndex);
+		//sysprintf("s_sChannel.u32SCKPinMask = %d\n",s_sChannel.u32SCKPinMask);
 	}
 	if(bStop)
 		 DrvI2C_SendStop_Thermal();
@@ -281,7 +286,7 @@ DrvI2C_ReadByte_Thermal(
 	BOOL bStop
 )
 {
-	UINT32   u32Data,i;
+	UINT32   u32Data;
 	UINT8    u8DataCount;
 	UINT32 u32ErrCode = Successful;
 	

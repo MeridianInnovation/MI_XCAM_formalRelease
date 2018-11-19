@@ -15,6 +15,8 @@ UINT32 u32CurFormatIndex = 1;
 
 __align(4) UINT32 u32Data[2][0x25800];
 
+INT8 u8SendThermaldata=0;
+
 #ifdef __PANEL__
 __align(4) UINT32 u32FrameData[0x25800];
 #endif
@@ -42,12 +44,10 @@ void uvcdEvent(UINT8 u8index)
                     g_extend = 320/2/WIDTH;		
                     break;			
                 case UVC_640:						
-                    for(i=0;i<153600;i++)
-										{
+                    for(i=0;i<153600;i++) {
                         u32Data[0][i] = 0x80008000;//0x80FF80FF;
                         u32Data[1][i] = 0x80008000;//0x80FF80FF;
-											
-										}
+					}
                     u32CurFrameIndex = uvcStatus.FrameIndex;
                     u32CurFormatIndex = uvcStatus.FormatIndex;						
                     g_extend = 448/2/WIDTH;			
@@ -55,6 +55,14 @@ void uvcdEvent(UINT8 u8index)
             } 				
         }			
         /* Send Image */	
-        uvcdSendImage((UINT32)&u32Data[u8index], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
+        //uvcdSendImage((UINT32)&u32Data[u8index], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
+        if(u8SendThermaldata) {   
+            /* Send Image */    	
+            uvcdSendImage((UINT32)&u32Data[0], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
+            /* Wait for Complete */ 			
+            while(!uvcdIsReady());		 
+            u8SendThermaldata = 0;    	
+        }
+        u8SendThermaldata = 1;	
     }  
 }

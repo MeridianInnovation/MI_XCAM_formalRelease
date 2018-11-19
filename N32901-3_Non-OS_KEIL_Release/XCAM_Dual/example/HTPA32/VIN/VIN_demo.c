@@ -59,12 +59,13 @@ IQ_S* pSensorIQ;
 
 int VIN_main(void)
 {
+	// Min : 86k (0.35W), Max: 200k(0.5W)
     sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
-        192000,			//UINT32 u32PllKHz, 	
-        192000,			//UINT32 u32SysKHz,
-        192000/2,		//UINT32 u32CpuKHz,
-        192000/4,		//UINT32 u32HclkKHz,
-        192000/4);	//UINT32 u32ApbKHz				  
+        86000,			//UINT32 u32PllKHz, 	
+        86000,			//UINT32 u32SysKHz,
+        86000/2,		//UINT32 u32CpuKHz,
+        86000/4,		//UINT32 u32HclkKHz,
+        86000/4);	//UINT32 u32ApbKHz				  
 	
     pSensorIQ = &SensorIQ; 
 

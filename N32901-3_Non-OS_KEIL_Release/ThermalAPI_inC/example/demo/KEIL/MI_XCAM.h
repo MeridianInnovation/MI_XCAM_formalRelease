@@ -1,5 +1,5 @@
 /*
- *	SDK Version: Release V3.05 180717
+ *	SDK Version: Release V3.07 181119
  *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
@@ -89,7 +89,7 @@ typedef unsigned char uchar;
 
 
 //pixelcount etc. for 32x32d
-#define VERSION				0x180717
+#define VERSION				0x181119
 #define TRANSFER_BUFFER  	32*32*4  
 #define Pixel 				1024				
 #define PixelEighth 		128
@@ -97,8 +97,8 @@ typedef unsigned char uchar;
 #define COLUMN 				32
 #define WIDTH	 	  		32
 #define HEIGHT 				32
-#define W_WIDTH 			1
-#define W_HEIGHT 			1
+#define W_WIDTH 			2
+#define W_HEIGHT 			2
 #define PTATamount 			8
 #define ELOFFSET 			1024				
 #define ELAMOUNT 			256

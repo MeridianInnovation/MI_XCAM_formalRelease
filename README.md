@@ -1,11 +1,11 @@
 # MI_XCAM_180717_formalRelease
 
 This is the user application project of using thermal sensor XCAM from Meridian Innovation Limited.
-There are two series MCU: M480 & N329-
+There are two series MCU: M480 & N329-. XCAM is running with USB Video Device Class(UVC), that capbale of streaming video like webcams without installing any specific drivers.
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V3.05 180717
+SDK Version: Release V3.07 181119
 
 # API
 
@@ -95,6 +95,7 @@ Solution: Control the blackets and Temperature display On/Off inside if(GetTempD
 -	How to read temperature output from UART?
 	
 First send UART command VCMD=DAT/AMT/TMP. The output is shown in Hex format. E.g: C9(HEX) = 201(DEC) = 20.1 degree / FFFFC9(HEX) = (FFFFFF - FFFFC9)54(DEC) = -5.4 degree
+Further details please refers to the documentation under UART/HUART Interface.
 
 -	Temperature value format
 
@@ -108,3 +109,8 @@ The temperature is not fine tuned at prototyping stage. The accuracy is +-1 degr
 
 The color palette is controlled by macros under COLOR_ADAPTIVE.  You can activate adaptive mode with "#define COLOR_ADAPTIVE" in MI_XCAM.h. You can define which color palette is using in ThermalSensor.h.
 
+-	What is the frequency(fps) the XCAM can run?
+
+On N329-
+Single:	2-8 fps
+Dual:	3-6 fps

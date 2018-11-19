@@ -18,9 +18,77 @@ extern YUV_COLOR_INFO_T YUV_ColorTable[];
 	extern RGB_COLOR_INFO_T RGB_ColorPalette[COLORPALETTESIZE];
 #endif
 extern FRAMEPOIS framePOIs;
-extern signed short TAN;		// Ambient Temperature = TAN - 2732; 
 
 LCDFORMATEX lcdInfo;
+
+/*
+*	System clk setup setSystemClkProfile(int setting).
+*	There are 6 profiles provided to adjust the clk speed of the N329 mcu, which will directly affect the frame rate
+*	of the XCAM. Profile 6 is not suggested since it is out of scope.
+*	The profile can be customized but not tested, better using provided profiles.
+*
+*	Input : int setting [1,6] , default in profile 4.
+*	profile 1 : 1.8-2 fps,	increased by 2 fps per profile
+*/
+void setSystemClkProfile(int setting) {
+	switch(setting) {
+		case 1:								// 1.8-2 fps	
+			sysSetSystemClock(eSYS_UPLL, 			//E_SYS_SRC_CLK eSrcClk,	
+							27000,					//UINT32 u32PllKHz, 	
+							27000,					//UINT32 u32SysKHz,
+							13500,					//UINT32 u32CpuKHz,
+							13500,					//UINT32 u32HclkKHz,
+							6750);					//UINT32 u32ApbKHz																			 		
+			break;	
+		case 2:								// 2-4 fps
+			sysSetSystemClock(eSYS_UPLL, 		
+							36000,		 	
+							36000,		
+							18000,		
+							18000,		
+							9000);																					 		
+			break;	
+		case 3:								// 4-6 fps
+			sysSetSystemClock(eSYS_UPLL, 		
+							72000,		 	
+							72000,		
+							36000,		
+							36000,		
+							18000);																			 		
+			break;	
+		case 4:								// 6-8 fps
+			sysSetSystemClock(eSYS_UPLL, 		
+							144000,		 	
+							144000,		
+							72000,		
+							72000,		
+							36000);		
+		case 5:								// 8 fps
+			sysSetSystemClock(eSYS_UPLL, 		
+							384000,		 	
+							192000,		
+							192000,		
+							192000,		
+							96000);																		 		
+			break;	
+		case 6:								// 8-10 fps	(Not suggested, out of spec)
+			sysSetSystemClock(eSYS_UPLL, 		
+							460800,		 	
+							230400,		
+							230400,		
+							230400,		
+							115200);																			 		
+			break;	
+		default:							// 6-8 fps
+			sysSetSystemClock(eSYS_UPLL, 		
+							144000,		 	
+							144000,		
+							72000,		
+							72000,		
+							36000);																			 		
+			break;	
+	}
+}
 
 int main (void)
 {    
@@ -28,14 +96,8 @@ int main (void)
 	UINT8 		u8SendThermaldata = 0;
 
     sysEnableCache(CACHE_WRITE_BACK);	
-    sysSetSystemClock(eSYS_UPLL, 	//E_SYS_SRC_CLK eSrcClk,	
-            192000,	   				//UINT32 u32PllKHz, 	
-             96000,		  			//UINT32 u32SysKHz,
-             96000,		  			//UINT32 u32CpuKHz,
-             96000,		  			//UINT32 u32HclkKHz,
-             48000);				//UINT32 u32ApbKHz		
-			 
-    Create_color_table(RGB_ColorPalette,YUV_ColorTable);
+	setSystemClkProfile(4);
+	Create_color_table(RGB_ColorPalette,YUV_ColorTable);
 	
 #ifdef __PANEL__	
     /* Init Panel */	
@@ -77,19 +139,20 @@ int main (void)
 	//SetTargetPixelIndex(WIDTH-1);
 	//SetTargetPixelIndex(WIDTH*HEIGHT - (WIDTH-1));
 	
+	
 	while(1)
 	{		
 		// Reset POI records for every frame
-		ResetFramePOIs();
+		//ResetFramePOIs();
 		
 		// Get Image Data 			
 		index = StartStreaming(0, 1, 1);
 
 		if(index != 0xFF)
 		{				
+			TempCal(g_extend);
 			if (usbdStatus.appConnected == 1)
 			{
-				TempCal(g_extend);
 				if(u8SendThermaldata)
 				{
 					uvcdSendImage((UINT32)&TDATA[g_TDATA_index], 2048, uvcStatus.StillImage);						
@@ -112,7 +175,7 @@ int main (void)
  * @param x xCoord for temperature (top left corner)
  * @param y yCoord for temperature (top left corner)
  **/
-void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp, UINT32 x, UINT32 y) //x-y goes 0-31
+void TempDisplay (UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp, UINT32 x, UINT32 y) //x-y goes 0-31
 {
 	int i,j;
 	int sum = 0;
@@ -137,11 +200,10 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 	//sum = EEPROMInfo.TableNumberSensor;
 	
 	
-// Left Temp display (Avg/Max)
+// Right Temp display (Avg/Max)
 #ifdef MIN_MAX_TEMP_DISPLAY
 	sum = framePOIs.maxTemPixel.Tmp;
 #endif
-	
 	g_i16DisTemp = sum;
 	g_i16Ready = 1;
 	u32Index0 = (sum /1000);
@@ -162,9 +224,9 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 	for(i = 0;i< 24;i++)
 	{
 		if(uvcStatus.FrameIndex == UVC_640)
-		  offset_UVC = start_UVC + i * 640/2;			
+			offset_UVC = start_UVC + i * 640/2;			
 		else
-			  offset_UVC = start_UVC + i * u32UVCWidth/2 + 20 * 3;	
+			offset_UVC = start_UVC + i * u32UVCWidth/2 + 20 * g_extend;	
 
 		offset_LCD_tmp = start_LCD + 28 + i * PANEL_WIDTH/2 + offset_LCD;												
 				
@@ -191,9 +253,10 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 	}	
 	
 	
-// Right temperature display (Min)
+// Left temperature display (Min)
 #ifdef MIN_MAX_TEMP_DISPLAY
 	sum = framePOIs.minTemPixel.Tmp;
+	
 	u32Index0 = (sum /1000);
 	u32Index1 = (sum /100) % 10;
 	u32Index2 = (sum /10) % 10;
@@ -201,9 +264,9 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDisp
 	for(i = 0;i< 24;i++)
 	{
 		if(uvcStatus.FrameIndex == UVC_640)
-		  offset_UVC = start_UVC + i * 640/2;			
+			offset_UVC = start_UVC + i * 640/2;			
 		else
-			  offset_UVC = start_UVC + i * u32UVCWidth/2;	
+			offset_UVC = start_UVC + i * u32UVCWidth/2;	
 
 		offset_LCD_tmp = start_LCD + 28 + i * PANEL_WIDTH/2 + offset_LCD;												
 				
@@ -378,9 +441,10 @@ VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offs
 VOID TempCal(int extend)
 {
 	  int i,j,k,l,offset_LCD,offset_UVC;
-	  unsigned int index,min,max;
+	  unsigned int index,min,max,paddedIndex;
 	  UINT32 value,count = 0;
 	  UINT32 u32UVCWidth;
+	  UINT8 *u8Data;	
 	  offset_LCD = ((PANEL_HEIGHT - (3*WIDTH*2)) * PANEL_WIDTH /4) + ((PANEL_WIDTH - (3*HEIGHT*2)) /4);
 	  offset_UVC = ((480 - 448) * 640 /4) + ((640 - 448) /4);
 	
@@ -395,7 +459,7 @@ VOID TempCal(int extend)
 		    {
 			      int index_offset;
 			      TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
-				  
+
 #ifdef COLOR_ADAPTIVE
 				value = TDATA[g_TDATA_index][count];
 				index = abs((signed int)value - min) * (COLORTABLESIZE - 1) / abs(max - min);
@@ -444,6 +508,34 @@ VOID TempCal(int extend)
 #endif						
 			}
 		}
+		
+#if 1	
+    u8Data = (UINT8 *)( (UINT32)&u32Data[g_TDATA_index][0] | BIT31);	
+	paddedIndex = 1;
+	for(i=0;i<1024;i++)
+	{
+		// +/-
+		if(TDATA[g_TDATA_index][i] >= 0)			 
+			u8Data[paddedIndex] = u8Data[paddedIndex] & ~0x1;
+		else            	
+			u8Data[paddedIndex] = u8Data[paddedIndex] | 0x1;
+				
+		value = abs(TDATA[g_TDATA_index][i]);				
+								
+		paddedIndex += 2;
+		// index start from 3
+		for(j=PIXELPADDEDBITS;j>=0;j--)
+		{					
+			if(value & (1 << j))					
+				u8Data[paddedIndex] = u8Data[paddedIndex] | 0x1;
+			else
+				u8Data[paddedIndex] = u8Data[paddedIndex] & ~0x1;
+						
+			paddedIndex += 2;
+		}
+	}	
+#endif		
+
 	if(GetTempDisplay() == 1) {
 		TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
 		Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);

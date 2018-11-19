@@ -13,7 +13,7 @@ extern	signed short			TAN;
 
 // Color mode defination
 #ifdef COLOR_ADAPTIVE						// Color palette please refers to Table_UVC.c	
-	#define COLORPALETTE0_WIDERANGE			// 9 table can be chosen, default Heated iron scale
+	#define COLORPALETTE0_WIDERANGE			// 9 tables can be chosen, default Heated iron scale
 #else
 	#define COLORPALETTE0			
 #endif
