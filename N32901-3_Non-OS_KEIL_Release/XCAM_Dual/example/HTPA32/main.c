@@ -8,15 +8,23 @@
 #include "DrvI2C.h"
 #endif
 #include "vin_demo.h"
+extern __align(4) volatile UVC_INFO_T 	uvcInfo;
+extern __align(4) UINT32 				u32PacketFrameBuffer[2][640*480/2];
+extern UINT32 							u32Lock,u32UvcBufferIndex;
+extern INT32 							g_i16DisTemp, g_i16Ready, g_TDATA_index;  
 
-extern __align(4) UINT32 		u32PacketFrameBuffer[2][640*480/2];
-extern UINT32 					u32Lock,u32UvcBufferIndex;
-extern INT32 					g_i16DisTemp, g_i16Ready, g_TDATA_index;  
+extern YUV_COLOR_INFO_T 				YUV_ColorTable[];
+extern RGB_COLOR_INFO_T 				RGB_ColorPalette[];
 
-extern YUV_COLOR_INFO_T 		YUV_ColorTable[];
-extern RGB_COLOR_INFO_T 		RGB_ColorPalette[];
+extern FRAMEPOIS 						framePOIs;
 
-extern FRAMEPOIS 				framePOIs;
+/* 	List of dead pixels that are not saved in EEPROM
+	Format: {x,y,mask}	, 0 < mask < 255
+*/
+extern DEADPIXEL_LIST 					DeadPixels;
+DEADPIXEL	deadPixelList[] = {
+		{0,0,0},
+};
 
 void 							uvcdEvent(UINT8 u8index);
 int 							VIN_main(void);
@@ -49,17 +57,19 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD)
     UINT32 		*u32Data;	
 	
 	/* Temperature Average */	
-	u32start =(HEIGHT - W_HEIGHT) / 2 * WIDTH +  (WIDTH - W_WIDTH) / 2;			
-	for(i=0;i<W_HEIGHT;i++)
-	{
-		for(j=0;j<W_WIDTH;j++)					    
-			sum = sum + TDATA[g_TDATA_index][u32start + i* WIDTH + j];
-	}	
-	sum = sum / W_HEIGHT / W_WIDTH;
-	  
-		
+	if(GetTargetPixelIndex() == -1) {		
+	  for(i=0;i<W_HEIGHT;i++) 			//get sum of the pixels in box
+	  {
+			for(j=0;j<W_WIDTH;j++)					    
+				sum = sum + TDATA[g_TDATA_index][i* WIDTH + j]; //TDATA[0][ 0-31*31] from what I can see
+		}	
+	  sum = sum / W_HEIGHT / W_WIDTH;
+	}
+	else
+		sum = GetTemp(GetTargetPixelIndex()%WIDTH,GetTargetPixelIndex()/WIDTH);
 	g_i16DisTemp = sum;
 	g_i16Ready = 1;
+	
 	if(GetTempDisplay() == 1) { 
 		u32Index0 = sum /100;
 
@@ -67,7 +77,7 @@ void TempDisplay(UINT32 u32UVCWidth, UINT32 offset_LCD)
 
 		u32Index2 = sum % 10;
 			
-		/* Temperature display */	
+		// Temperature display
 		start_UVC = (u32UVCWidth - 56) / 2 + 64 * u32UVCWidth / 2;	
 		u32Data = (UINT32 *)((UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
 		for(i = 0;i< 24;i++)
@@ -126,12 +136,11 @@ VOID Draw_Area(UINT32 extend, UINT32 u32UVCWidth, UINT32 offset_UVC, UINT32 offs
 
 VOID TempCal(int extend)
 {
-	int i,j,offset_UVC;
+	int i,j;
 	UINT8 *u8Data;	
     UINT32 *u32Data;	
 	UINT32 value,count = 0,index;
-	UINT32 u32UVCWidth, u32Width, u32Height;
-//    UINT8 u8Sign = 0, hundreds, tens, units;  	
+	UINT32 u32UVCWidth, u32Width, u32Height;	
 	
     g_i16Ready = 0;
     g_TDATA_index = (g_TDATA_index ^1) & 0x01;
@@ -151,50 +160,39 @@ VOID TempCal(int extend)
         u32Width = 160; 				
         u32Height = 120; 								
     }    	
-		u32UVCWidth = u32Width;
-		
-    offset_UVC = (u32Width - 32);
-	
-    u32Data = (UINT32 *)( (UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
-	  for(i=0;i<HEIGHT;i++)
-		{ 
-			for(j=0;j<WIDTH;j++)
-			{
-				  TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
-				  count++;
-			}
+	u32UVCWidth = u32Width;
+	for(i=0;i<HEIGHT;i++) { 
+		for(j=0;j<WIDTH;j++) {
+			TDATA[g_TDATA_index][count] = Target[j][i] - 2732;
+			count++;
 		}
-		index = 1;
+	}
+	index = 1;
+	
+	TempDisplay(u32UVCWidth, 0);
 #if 1	
     u8Data = (UINT8 *)( (UINT32)&u32PacketFrameBuffer[u32UvcBufferIndex][0] | BIT31);		
-		for(i=0;i<1024;i++)
-		{
-			// +/-
-			if(TDATA[g_TDATA_index][i] >= 0)			 
-				u8Data[index] = u8Data[index] & ~0x1;
-			else            	
+	for(i=0;i<1024;i++) {
+		// +/-
+		if(TDATA[g_TDATA_index][i] >= 0)			 
+			u8Data[index] = u8Data[index] & ~0x1;
+		else            	
+			u8Data[index] = u8Data[index] | 0x1;
+				
+		value = abs(TDATA[g_TDATA_index][i]);				
+								
+		index += 2;
+		// index start from 3
+		for(j=PIXELPADDEDBITS;j>=0;j--) {					
+			if(value & (1 << j))					
 				u8Data[index] = u8Data[index] | 0x1;
-					
-			value = abs(TDATA[g_TDATA_index][i]);				
-									
+			else
+				u8Data[index] = u8Data[index] & ~0x1;
+						
 			index += 2;
-			// index start from 3
-			for(j=PIXELPADDEDBITS;j>=0;j--)
-			{					
-				if(value & (1 << j))					
-					u8Data[index] = u8Data[index] | 0x1;
-				else
-					u8Data[index] = u8Data[index] & ~0x1;
-							
-				index += 2;
-			}
-		}	
+		}
+	}	
 #endif		
-    offset_UVC = ((u32Height - 448) * u32Width /4) + ((u32Width - 448) /4);
-	TempDisplay(u32UVCWidth, 0);
-	if(GetTempDisplay() == 1) {
-		Draw_Area(extend, u32UVCWidth, offset_UVC, 0);		
-	}
 }
 
 int main (void)
@@ -209,6 +207,9 @@ int main (void)
 	outp32(REG_AHBCLK, inp32(REG_AHBCLK) & ~VPOST_CKE);
 				
     VIN_main();	
+	
+	DeadPixels.pDeadPixels = deadPixelList;
+	DeadPixels.numOfElement = sizeof(deadPixelList) / sizeof(deadPixelList[0]);
 						 
 	N329_InitSensor();
 	N329_OpenSensor();

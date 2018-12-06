@@ -1,5 +1,5 @@
 /*
- *	SDK Version: Release V3.07 181119
+ *	SDK Version: Release V3.08 181204
  *	Copyright (C) 2018 MERIDIAN Innovation Limited. All rights reserved.
  */
  
@@ -15,7 +15,7 @@
 #include "wbio.h"
 #include "wblib.h"
 
-#define TEMP_OFFSET 		2.0 				// Temperature offset
+#define TEMP_OFFSET 		0.0 				// Temperature offset
 #define PANEL_WIDTH			320					/* PANEL Width (Raw data output width for Panel Test) */
 #define PANEL_HEIGHT		240     			/* PANEL Height (Raw data output height for Panel Test) */
 #define PIXELPADDEDBITS		13
@@ -89,7 +89,7 @@ typedef unsigned char uchar;
 
 
 //pixelcount etc. for 32x32d
-#define VERSION				0x181119
+#define VERSION				0x181205
 #define TRANSFER_BUFFER  	32*32*4  
 #define Pixel 				1024				
 #define PixelEighth 		128
@@ -195,10 +195,21 @@ typedef struct TEMPIXEL{
 	signed short			Tmp;
 } TEMPIXEL;
 
+typedef struct DEADPIXEL {
+	unsigned short 			x;
+	unsigned short			y;
+	int						mask;
+} DEADPIXEL;
+
 typedef struct FRAMEPOI {
 	TEMPIXEL				maxTemPixel;
 	TEMPIXEL				minTemPixel;
 } FRAMEPOIS;
+
+typedef struct DEADPIXEL_LIST{
+	DEADPIXEL* 				pDeadPixels;
+	int						numOfElement;
+} DEADPIXEL_LIST;
 
 /*
 *	API
@@ -218,6 +229,7 @@ void 			InitPUTRIMN(unsigned char user);
 
 unsigned int 	CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 void 			Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]);
+void 			DeadPixelMasking(DEADPIXEL pixel);
 FRAMEPOIS		GetFramePOIs(void);
 void 			GetImageData(void);
 int 			GetTargetPixelIndex(void);

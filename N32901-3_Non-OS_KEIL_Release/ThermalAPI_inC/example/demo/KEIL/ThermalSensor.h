@@ -38,6 +38,7 @@ extern	signed short			TAN;
 */
 void							N329_InitSensor(void);
 void							N329_OpenSensor(void);
+void 							N329_VideoStreaming(void);
 
 int								N329_Interface_init(unsigned short interface);
 void 							N329_UartDataValid_Handler(UINT8* buf, UINT32 u32Len);

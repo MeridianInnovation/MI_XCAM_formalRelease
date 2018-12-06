@@ -55,10 +55,10 @@ void uvcdEvent(UINT8 u8index)
             } 				
         }			
         /* Send Image */	
-        //uvcdSendImage((UINT32)&u32Data[u8index], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
         if(u8SendThermaldata) {   
-            /* Send Image */    	
-            uvcdSendImage((UINT32)&u32Data[0], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
+            /* Send Image */    
+			uvcdSendImage((UINT32)&u32Data[u8index][0], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
+            //uvcdSendImage((UINT32)&u32Data[0], uvcStatus.MaxVideoFrameSize, uvcStatus.StillImage);
             /* Wait for Complete */ 			
             while(!uvcdIsReady());		 
             u8SendThermaldata = 0;    	

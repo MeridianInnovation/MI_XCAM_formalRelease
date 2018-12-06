@@ -32,12 +32,11 @@ void uvcdEvent(UINT8 u8index)
 	    
     if (usbdStatus.appConnected == 1)
     { 		
-	    
         if(u32CurFrameIndex != uvcStatus.FrameIndex ||u32CurFormatIndex != uvcStatus.FormatIndex)
         {
             /* Frame Size Changed */
             switch(uvcStatus.FrameIndex)
-            {										
+            {			
                 case UVC_QQVGA:
                     u32CurFrameIndex = uvcStatus.FrameIndex;
                     u32CurFormatIndex = uvcStatus.FormatIndex;	

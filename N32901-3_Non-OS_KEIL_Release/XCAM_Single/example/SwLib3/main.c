@@ -2,9 +2,9 @@
 #include "w55fa93_vpost.h"
 #include "videoclass_HTPA32.h"
 
-VOID TempCal(int extend);
-void uvcdEvent(UINT8 u8index);
-
+//VOID TempCal(int extend);
+//void uvcdEvent(UINT8 u8index);
+extern __align(4) volatile UVC_INFO_T uvcInfo;
 extern __align(4) INT32 u32Data[2][0x25800];
 #ifdef __PANEL__
 extern __align(4) INT32 u32FrameData[];
@@ -20,6 +20,14 @@ extern YUV_COLOR_INFO_T YUV_ColorTable[];
 extern FRAMEPOIS framePOIs;
 
 LCDFORMATEX lcdInfo;
+
+/* 	List of dead pixels that are not saved in EEPROM
+	Format: {x,y,mask}	, 0<= x/y < WIDTH/HEIGHT; 0 < mask < 255
+*/
+extern DEADPIXEL_LIST DeadPixels;
+DEADPIXEL	deadPixelList[] = {
+		{0,0,0},
+};
 
 /*
 *	System clk setup setSystemClkProfile(int setting).
@@ -92,9 +100,6 @@ void setSystemClkProfile(int setting) {
 
 int main (void)
 {    
-    INT 		index;   
-	UINT8 		u8SendThermaldata = 0;
-
     sysEnableCache(CACHE_WRITE_BACK);	
 	setSystemClkProfile(4);
 	Create_color_table(RGB_ColorPalette,YUV_ColorTable);
@@ -114,6 +119,9 @@ int main (void)
     for(i=0;i<38400;i++)
         u32FrameData[i] = 0x80008000;//0x80FF80FF;
 #endif			
+
+	DeadPixels.pDeadPixels = deadPixelList;
+	DeadPixels.numOfElement = sizeof(deadPixelList) / sizeof(deadPixelList[0]);
 
 	// UART/HUART interface initialization
 	N329_Interface_init(HUART);	
@@ -136,36 +144,11 @@ int main (void)
 	SetTempDisplay(1);
 	
 	// Set to show particular pixel values
-	//SetTargetPixelIndex(WIDTH-1);
+	//SetTargetPixelIndex(32*26+8);
 	//SetTargetPixelIndex(WIDTH*HEIGHT - (WIDTH-1));
 	
-	
-	while(1)
-	{		
-		// Reset POI records for every frame
-		//ResetFramePOIs();
-		
-		// Get Image Data 			
-		index = StartStreaming(0, 1, 1);
-
-		if(index != 0xFF)
-		{				
-			TempCal(g_extend);
-			if (usbdStatus.appConnected == 1)
-			{
-				if(u8SendThermaldata)
-				{
-					uvcdSendImage((UINT32)&TDATA[g_TDATA_index], 2048, uvcStatus.StillImage);						
-					// Wait for Complete  			
-					while(!uvcdIsReady());		 
-					u8SendThermaldata = 0;
-					while(!uvcdIsReady());		
-				}
-				uvcdEvent(g_TDATA_index);	
-				u8SendThermaldata = 1;	
-			}
-		}
-	}
+	while(1) 
+		N329_VideoStreaming();
 }
 
 /**
@@ -198,7 +181,6 @@ void TempDisplay (UINT32 u32UVCWidth, UINT32 offset_LCD, float xDisp, float yDis
 	// Single pixel
 	//sum = GetTemp(31,0);
 	//sum = EEPROMInfo.TableNumberSensor;
-	
 	
 // Right Temp display (Avg/Max)
 #ifdef MIN_MAX_TEMP_DISPLAY
@@ -508,7 +490,12 @@ VOID TempCal(int extend)
 #endif						
 			}
 		}
-		
+
+	if(GetTempDisplay() == 1) {
+		TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
+		Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);
+	}
+	
 #if 1	
     u8Data = (UINT8 *)( (UINT32)&u32Data[g_TDATA_index][0] | BIT31);	
 	paddedIndex = 1;
@@ -521,7 +508,6 @@ VOID TempCal(int extend)
 			u8Data[paddedIndex] = u8Data[paddedIndex] | 0x1;
 				
 		value = abs(TDATA[g_TDATA_index][i]);				
-								
 		paddedIndex += 2;
 		// index start from 3
 		for(j=PIXELPADDEDBITS;j>=0;j--)
@@ -535,9 +521,4 @@ VOID TempCal(int extend)
 		}
 	}	
 #endif		
-
-	if(GetTempDisplay() == 1) {
-		TempDisplay(u32UVCWidth, offset_LCD, 0, 0, 15, 15);	
-		Draw_Area(extend, u32UVCWidth, offset_UVC, offset_LCD, 15, 15);
-	}
 }

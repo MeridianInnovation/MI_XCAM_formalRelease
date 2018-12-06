@@ -26,7 +26,7 @@ typedef struct
 
 struct OV_RegValue
 {
-	UINT8	u8RegAddr;		//Register Address
+	UINT8	u8RegAddr;			//Register Address
 	UINT8	u8Value;			//Register Data
 };
 

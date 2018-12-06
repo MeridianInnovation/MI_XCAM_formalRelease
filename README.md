@@ -5,7 +5,7 @@ There are two series MCU: M480 & N329-. XCAM is running with USB Video Device Cl
 
 Please read XCAM_Documentation.docx for more details.
 
-SDK Version: Release V3.07 181119
+SDK Version: Release V3.08 181205
 
 # API
 
@@ -22,6 +22,8 @@ ThermalSensor.h
 		void			N329_InitSensor(void);
 
 		void			N329_OpenSensor(void);
+
+		void			N329_VideoStreaming(void);
 
 		int			N329_Interface_init (unsigned short interface);
 
@@ -56,6 +58,8 @@ MI_XCAM.h
 		unsigned int 		CalcTO(unsigned int TAmb, signed int dig, signed long PiC, unsigned int dontCalcTA);
 
 		void 			Create_color_table(RGB_COLOR_INFO_T RGB_ColorPalette[],YUV_COLOR_INFO_T YUV_ColorTable[]);
+
+		void	 		DeadPixelMasking (DEADPIXEL pixel);
 
 		FRAMEPOIS 		GetFramePOIs (void);
 
